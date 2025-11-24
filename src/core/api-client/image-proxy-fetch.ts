@@ -1,0 +1,51 @@
+import { API_HOST } from '@/core/api-client/const.ts';
+
+export interface ImageProxySuccessResponse {
+    success: true;
+    data: ImageData;
+}
+
+export interface ImageProxyErrorResponse {
+    success: false;
+    error: unknown;
+}
+
+export type ImageProxyResponse = ImageProxySuccessResponse | ImageProxyErrorResponse;
+
+export async function fetchImageViaProxy(imageUrl: string, options: RequestInit = {}): Promise<ImageProxyResponse> {
+    const response = await fetch(`https://${API_HOST}/imageproxy/${encodeURIComponent(imageUrl)}`, {
+        ...options,
+        method: 'GET',
+    });
+    if (response.status >= 400 && response.status <= 599) {
+        return {
+            success: false,
+            error: `Image proxy request failed with status ${response.status}`,
+        };
+    }
+    const blob = await response.blob();
+    let imageBitmap: ImageBitmap;
+    try {
+        imageBitmap = await createImageBitmap(blob);
+    } catch (e: unknown) {
+        return {
+            success: false,
+            error: new Error('Failed to create ImageBitmap from blob', { cause: e }),
+        };
+    }
+    const canvas = new OffscreenCanvas(imageBitmap.width, imageBitmap.height);
+    const context = canvas.getContext('2d');
+    if (!context) {
+        return {
+            success: false,
+            error: 'Failed to get canvas context',
+        };
+    }
+    context.drawImage(imageBitmap, 0, 0);
+    const imageData = context.getImageData(0, 0, imageBitmap.width, imageBitmap.height);
+    imageBitmap.close();
+    return {
+        success: true,
+        data: imageData,
+    };
+}

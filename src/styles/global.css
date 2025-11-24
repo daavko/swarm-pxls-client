@@ -1,0 +1,12 @@
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+a,
+a:hover,
+a:active,
+a:visited {
+    color: inherit;
+    text-decoration: underline;
+    cursor: pointer;
+}

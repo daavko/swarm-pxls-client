@@ -1,8 +1,15 @@
-<script setup lang="ts"></script>
-
 <template>
-    <h1>You did it!</h1>
-    <p>Visit <a href="https://vuejs.org/" target="_blank" rel="noopener">vuejs.org</a> to read the documentation</p>
+    <router-view></router-view>
 </template>
 
+<script setup lang="ts"></script>
+
 <style scoped></style>
+
+<style>
+@import 'ress/ress.css';
+@import './styles/global.css';
+@import './styles/inter.css';
+@import './styles/text-utils.css';
+@import './styles/utils.css';
+</style>

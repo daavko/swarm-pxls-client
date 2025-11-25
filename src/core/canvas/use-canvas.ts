@@ -26,7 +26,7 @@ type CanvasState =
 
 export const CANVAS_RESET_BUS_KEY: EventBusKey<void> = Symbol('Canvas reset event bus');
 
-const usePxlsCanvasInternal = defineStore('canvas-internal', () => {
+const useCanvasInternal = defineStore('canvas-internal', () => {
     const state = ref<CanvasState>('beforeFirstConnect');
     const info = shallowRef<InfoResponse | null>(null);
     const boardData = shallowRef<ImageData | null>(null);
@@ -43,10 +43,11 @@ export const useCanvas = defineStore('canvas', () => {
     const canvasSocketDisconnectedBus = useEventBus(CANVAS_SOCKET_DISCONNECTED_BUS_KEY);
     const canvasResetBus = useEventBus(CANVAS_RESET_BUS_KEY);
 
-    const { state, info, boardData } = storeToRefs(usePxlsCanvasInternal());
+    const { state, info, boardData } = storeToRefs(useCanvasInternal());
 
     canvasSocketMessageBus.on(() => {
         if (state.value === 'running') {
+            // todo: pixel placements
         }
     });
     canvasSocketErrorBus.on(() => {

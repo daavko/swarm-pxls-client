@@ -6,6 +6,7 @@ export interface DialogButton<TButtonReturnType> {
 export interface OpenDialogOptions {
     title?: string;
     content: string | DocumentFragment;
+    backdrop?: boolean;
     closeOnBackdropClick?: boolean;
     closeOnEscape?: boolean;
 }

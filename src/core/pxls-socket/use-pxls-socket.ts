@@ -1,5 +1,5 @@
-import { API_HOST } from '@/core/api-client/const.ts';
-import { SocketClientMessage } from '@/core/socket-client/schemas/message-schemas.ts';
+import { PXLS_API_HOST } from '@/core/pxls-api/const.ts';
+import { SocketClientMessage } from '@/core/pxls-socket/schemas/message-schemas.ts';
 import { type EventBusKey, useEventBus, useWebSocket, type UseWebSocketReturn } from '@vueuse/core';
 import * as v from 'valibot';
 
@@ -15,8 +15,8 @@ const errorEventBus = useEventBus(CANVAS_SOCKET_ERROR_BUS_KEY);
 const connectedEventBus = useEventBus(CANVAS_SOCKET_CONNECTED_BUS_KEY);
 const disconnectedEventBus = useEventBus(CANVAS_SOCKET_DISCONNECTED_BUS_KEY);
 
-export function useCanvasSocket(): UseWebSocketReturn<unknown> {
-    canvasSocket ??= useWebSocket(`wss://${API_HOST}/pxls/ws`, {
+export function usePxlsSocket(): UseWebSocketReturn<unknown> {
+    canvasSocket ??= useWebSocket(`wss://${PXLS_API_HOST}/pxls/ws`, {
         immediate: false,
         onMessage: (_, event) => {
             try {

@@ -1,5 +1,5 @@
-import { ChatBadge } from '@/core/api-client/schemas/chat-history.ts';
-import { Notification } from '@/core/api-client/schemas/notifications.ts';
+import { ChatBadge } from '@/core/pxls-api/schemas/chat-history.ts';
+import { Notification } from '@/core/pxls-api/schemas/notifications.ts';
 import { Integer, MillisecondsDate, NonNegativeInteger, NonNegativeNumber, SecondsDate } from '@/utils/schema.ts';
 import * as v from 'valibot';
 

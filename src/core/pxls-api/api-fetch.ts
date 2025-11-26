@@ -1,4 +1,4 @@
-import { API_HOST } from '@/core/api-client/const.ts';
+import { PXLS_API_HOST } from '@/core/pxls-api/const.ts';
 import type { GenericSchema } from 'valibot';
 import * as v from 'valibot';
 
@@ -21,7 +21,7 @@ export async function apiFetch<TInput, TOutput>(
 ): Promise<ApiResponse<TOutput>> {
     let response: Response;
     try {
-        response = await fetch(`https://${API_HOST}/pxls${path}`, options);
+        response = await fetch(`https://${PXLS_API_HOST}/pxls${path}`, options);
     } catch (e) {
         return {
             success: false,
@@ -52,7 +52,7 @@ export async function apiFetch<TInput, TOutput>(
 export async function binaryApiFetch(path: string, options: RequestInit = {}): Promise<ApiResponse<ArrayBuffer>> {
     let response: Response;
     try {
-        response = await fetch(`https://${API_HOST}/pxls${path}`, options);
+        response = await fetch(`https://${PXLS_API_HOST}/pxls${path}`, options);
     } catch (e) {
         return {
             success: false,

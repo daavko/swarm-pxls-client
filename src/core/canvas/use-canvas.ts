@@ -1,14 +1,14 @@
-import { apiFetch, type ApiResponse, binaryApiFetch } from '@/core/api-client/api-fetch.ts';
-import { InfoResponse } from '@/core/api-client/schemas/info.ts';
-import { useErrorLogger } from '@/core/logger/use-error-logger.ts';
-import type { PixelMessage } from '@/core/socket-client/schemas/message-schemas.ts';
+import { logError } from '@/core/logger/error-log.ts';
+import { apiFetch, type ApiResponse, binaryApiFetch } from '@/core/pxls-api/api-fetch.ts';
+import { InfoResponse } from '@/core/pxls-api/schemas/info.ts';
+import type { PixelMessage } from '@/core/pxls-socket/schemas/message-schemas.ts';
 import {
     CANVAS_SOCKET_CONNECTED_BUS_KEY,
     CANVAS_SOCKET_DISCONNECTED_BUS_KEY,
     CANVAS_SOCKET_ERROR_BUS_KEY,
     CANVAS_SOCKET_MESSAGE_BUS_KEY,
-    useCanvasSocket,
-} from '@/core/socket-client/use-canvas-socket.ts';
+    usePxlsSocket,
+} from '@/core/pxls-socket/use-pxls-socket.ts';
 import { type EventBusKey, useEventBus } from '@vueuse/core';
 import { defineStore, storeToRefs } from 'pinia';
 import { computed, readonly, ref, shallowRef } from 'vue';
@@ -35,8 +35,7 @@ const useCanvasInternal = defineStore('canvas-internal', () => {
 });
 
 export const useCanvas = defineStore('canvas', () => {
-    const errorLogger = useErrorLogger();
-    const canvasSocket = useCanvasSocket();
+    const canvasSocket = usePxlsSocket();
     const canvasSocketMessageBus = useEventBus(CANVAS_SOCKET_MESSAGE_BUS_KEY);
     const canvasSocketErrorBus = useEventBus(CANVAS_SOCKET_ERROR_BUS_KEY);
     const canvasSocketConnectedBus = useEventBus(CANVAS_SOCKET_CONNECTED_BUS_KEY);
@@ -74,7 +73,7 @@ export const useCanvas = defineStore('canvas', () => {
                 resolve(false);
             });
             const errorStop = canvasSocketErrorBus.once((event) => {
-                errorLogger.logError(event);
+                logError(event);
                 connectedStop();
                 disconnectedStop();
                 resolve(false);
@@ -87,14 +86,14 @@ export const useCanvas = defineStore('canvas', () => {
         try {
             infoResponse = await apiFetch('/info', InfoResponse, { signal: AbortSignal.timeout(5000) });
         } catch (e) {
-            errorLogger.logError(e);
+            logError(e);
             return null;
         }
 
         if (infoResponse.success) {
             return infoResponse.data;
         } else {
-            errorLogger.logError(infoResponse.error);
+            logError(infoResponse.error);
             return null;
         }
     }
@@ -104,14 +103,14 @@ export const useCanvas = defineStore('canvas', () => {
         try {
             boardDataResponse = await binaryApiFetch('/boarddata', { signal: AbortSignal.timeout(5000) });
         } catch (e) {
-            errorLogger.logError(e);
+            logError(e);
             return null;
         }
 
         if (boardDataResponse.success) {
             return boardDataResponse.data;
         } else {
-            errorLogger.logError(boardDataResponse.error);
+            logError(boardDataResponse.error);
             return null;
         }
     }
@@ -165,7 +164,7 @@ export const useCanvas = defineStore('canvas', () => {
         const { width, height, palette } = info.value;
 
         if (boardArrayBuffer.byteLength !== width * height) {
-            errorLogger.logError(
+            logError(
                 new Error('Board data size does not match expected dimensions', {
                     cause: {
                         expectedSize: width * height,

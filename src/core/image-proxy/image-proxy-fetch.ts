@@ -1,4 +1,4 @@
-import { API_HOST } from '@/core/api-client/const.ts';
+import { IMAGE_PROXY_HOST } from '@/core/image-proxy/const.ts';
 
 export interface ImageProxySuccessResponse {
     success: true;
@@ -13,7 +13,7 @@ export interface ImageProxyErrorResponse {
 export type ImageProxyResponse = ImageProxySuccessResponse | ImageProxyErrorResponse;
 
 export async function fetchImageViaProxy(imageUrl: string, options: RequestInit = {}): Promise<ImageProxyResponse> {
-    const response = await fetch(`https://${API_HOST}/imageproxy/${encodeURIComponent(imageUrl)}`, {
+    const response = await fetch(`https://${IMAGE_PROXY_HOST}/imageproxy/${encodeURIComponent(imageUrl)}`, {
         ...options,
         method: 'GET',
     });

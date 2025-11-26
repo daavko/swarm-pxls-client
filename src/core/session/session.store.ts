@@ -1,6 +1,7 @@
-import type { UserinfoMessage } from '@/core/socket-client/schemas/message-schemas.ts';
-import { CANVAS_SOCKET_MESSAGE_BUS_KEY } from '@/core/socket-client/use-canvas-socket.ts';
-import { useEventBus, useLocalStorage } from '@vueuse/core';
+import type { UserinfoMessage } from '@/core/pxls-socket/schemas/message-schemas.ts';
+import { CANVAS_SOCKET_MESSAGE_BUS_KEY } from '@/core/pxls-socket/use-pxls-socket.ts';
+import { useSessionLoginFlowStorage } from '@/core/session/use-session-login-flow-storage.ts';
+import { useEventBus } from '@vueuse/core';
 import { defineStore, storeToRefs } from 'pinia';
 import { computed, readonly, ref } from 'vue';
 
@@ -12,9 +13,9 @@ const useSessionInternal = defineStore('session-internal', () => {
     return { userInfo };
 });
 
-const useSession = defineStore('session', () => {
+const useSessionStore = defineStore('session', () => {
     const canvasSocketMessageBus = useEventBus(CANVAS_SOCKET_MESSAGE_BUS_KEY);
-    const loginStateStorage = useLocalStorage('session-login', false);
+    const loginStateStorage = useSessionLoginFlowStorage();
     const { userInfo } = storeToRefs(useSessionInternal());
 
     canvasSocketMessageBus.on((message) => {

@@ -1,6 +1,6 @@
+import type { Size } from '@/utils/geometry.ts';
 import { type MaybeComputedElementRef, useResizeObserver } from '@vueuse/core';
 import { computed, type ComputedRef, type Ref, ref } from 'vue';
-import type { Size } from '@/utils/geometry.ts';
 
 function platformSupportsDevicePixelContentBox(): boolean {
     const div = document.createElement('div');

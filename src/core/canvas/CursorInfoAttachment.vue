@@ -7,9 +7,9 @@
 
 <script setup lang="ts">
 import { useCanvas, useTypeAssistedCanvasInfo } from '@/core/canvas/canvas.store.ts';
+import { useSession } from '@/core/session/session.store.ts';
 import { useMouse } from '@vueuse/core';
 import { storeToRefs } from 'pinia';
-import { useSession } from '@/core/session/session.store.ts';
 
 const { selectedColor } = storeToRefs(useCanvas());
 const info = useTypeAssistedCanvasInfo();

@@ -17,12 +17,12 @@
 </template>
 
 <script setup lang="ts">
+import BlockButton from '@/core/common/BlockButton.vue';
 import { useDialog } from '@/core/dialog/dialog.store.ts';
 import { CURRENT_DIALOG } from '@/core/dialog/injection-symbols.ts';
 import type { Dialog } from '@/core/dialog/types.ts';
 import { useNow } from '@vueuse/core';
 import { computed, inject, onMounted, ref } from 'vue';
-import BlockButton from '@/core/common/BlockButton.vue';
 
 const { closeDialog } = useDialog();
 

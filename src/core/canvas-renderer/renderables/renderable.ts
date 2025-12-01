@@ -6,5 +6,5 @@ export abstract class Renderable {
     }
 
     abstract render(projectionMatrixUniform: Float32Array): void;
-    abstract destroy(gl: WebGL2RenderingContext): void;
+    abstract destroy(): void;
 }

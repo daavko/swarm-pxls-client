@@ -3,9 +3,10 @@
 </template>
 
 <script setup lang="ts">
+import { useCanvasRenderer } from '@/core/canvas-renderer/canvas-renderer.store.ts';
 import { useCanvasAutosize } from '@/core/canvas-renderer/use-canvas-autosize.ts';
 import { useRafFn } from '@vueuse/core';
-import { onMounted, ref, useTemplateRef } from 'vue';
+import { onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 const canvasRef = useTemplateRef<HTMLCanvasElement>('canvas');
@@ -13,13 +14,9 @@ const canvasRef = useTemplateRef<HTMLCanvasElement>('canvas');
 const route = useRoute();
 const router = useRouter();
 const size = useCanvasAutosize(canvasRef);
+const canvasRenderer = useCanvasRenderer();
 
-const glRef = ref<WebGL2RenderingContext | null>(null);
 const glError = ref<string | null>(null);
-
-const x = ref<number>(0);
-const y = ref<number>(0);
-const scale = ref<number>(1);
 
 onMounted(() => {
     const canvas = canvasRef.value;
@@ -41,52 +38,42 @@ onMounted(() => {
         return;
     }
 
-    glRef.value = gl;
-
     if (route.query['x'] != null && typeof route.query['x'] === 'string') {
         const queryX = parseInt(route.query['x']);
         if (!isNaN(queryX)) {
-            x.value = queryX;
+            canvasRenderer.x = queryX;
         }
     }
 
     if (route.query['y'] != null && typeof route.query['y'] === 'string') {
         const queryY = parseInt(route.query['y']);
         if (!isNaN(queryY)) {
-            y.value = queryY;
+            canvasRenderer.y = queryY;
         }
     }
 
     if (route.query['scale'] != null && typeof route.query['scale'] === 'string') {
         const queryScale = parseFloat(route.query['scale']);
         if (!isNaN(queryScale)) {
-            scale.value = queryScale;
+            canvasRenderer.scale = queryScale;
         }
     }
 
     void router.replace({ query: { ...route.query, x: null, y: null, scale: null } });
 
+    canvasRenderer.renderContextCreated(gl);
+
     useRafFn(() => {
         const { width, height } = size.value;
         canvas.width = width;
         canvas.height = height;
-        gl.viewport(0, 0, width, height);
-        render();
+        canvasRenderer.render(width, height);
     });
 });
 
-function render(): void {
-    const gl = glRef.value;
-    if (!gl) {
-        return;
-    }
-
-    gl.clearColor(26 / 255, 26 / 255, 26 / 255, 1);
-    gl.clear(gl.COLOR_BUFFER_BIT);
-
-    const { width, height } = size.value;
-    // todo: rendering code
-}
+onBeforeUnmount(() => {
+    canvasRenderer.renderContextDestroyed();
+});
 </script>
 
 <style scoped>

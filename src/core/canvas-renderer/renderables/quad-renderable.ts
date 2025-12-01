@@ -58,7 +58,8 @@ export abstract class QuadRenderable extends Renderable {
         this.teardownRenderingContext();
     }
 
-    override destroy(gl: WebGL2RenderingContext): void {
+    override destroy(): void {
+        const { gl } = this;
         gl.deleteProgram(this.activeProgram);
         gl.deleteBuffer(this.vertexBuffer);
         gl.deleteBuffer(this.texCoordBuffer);

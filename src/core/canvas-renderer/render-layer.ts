@@ -1,13 +1,30 @@
-export abstract class RenderLayer {
-    readonly name: string;
-    readonly title: string;
+import type { Renderable } from '@/core/canvas-renderer/renderables/renderable.ts';
 
-    constructor(name: string, title: string) {
-        this.name = name;
-        this.title = title;
+export abstract class RenderLayer {
+    protected renderables: Renderable[] = [];
+
+    abstract readonly name: string;
+    abstract readonly title: string;
+    abstract readonly defaultOptions: Readonly<RenderLayerOptions>;
+
+    render(projectionMatrixUniform: Float32Array): void {
+        for (const renderable of this.renderables) {
+            renderable.render(projectionMatrixUniform);
+        }
+    }
+
+    destroyRenderables(): void {
+        for (const renderable of this.renderables) {
+            renderable.destroy();
+        }
+        this.renderables = [];
     }
 
     abstract createRenderables(gl: WebGL2RenderingContext): void;
-    abstract destroyRenderables(): void;
-    abstract render(projectionMatrixUniform: Float32Array): void;
+}
+
+export interface RenderLayerOptions {
+    name: string;
+    opacity: number;
+    enabled: boolean;
 }

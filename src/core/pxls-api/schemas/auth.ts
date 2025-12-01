@@ -1,10 +1,10 @@
-import * as v from 'valibot';
 import { UrlString } from '@/utils/schema.ts';
+import * as v from 'valibot';
 
-export const LoginResponse = v.object({
+export const StartAuthResponse = v.object({
     url: UrlString,
 });
-export type LoginResponse = v.InferOutput<typeof LoginResponse>;
+export type StartAuthResponse = v.InferOutput<typeof StartAuthResponse>;
 
 export const AuthResponse = v.object({
     token: v.string(),

@@ -1,4 +1,4 @@
-import { PXLS_API_HOST } from '@/core/pxls-api/const.ts';
+import { PXLS_API_ORIGIN } from '@/core/pxls-api/const.ts';
 import type { GenericSchema } from 'valibot';
 import * as v from 'valibot';
 
@@ -14,14 +14,32 @@ export interface ApiErrorResponse {
 
 export type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse;
 
+function buildApiFetchUrl(path: string, searchParams?: URLSearchParams): URL {
+    const url = new URL(`${PXLS_API_ORIGIN}/pxls${path}`);
+    if (searchParams) {
+        url.search = searchParams.toString();
+    }
+    return url;
+}
+
+interface ApiFetchOptionsExtras {
+    searchParams?: URLSearchParams;
+}
+
+type ApiFetchOptions = RequestInit & ApiFetchOptionsExtras;
+
 export async function apiFetch<TInput, TOutput>(
     path: string,
     schema: GenericSchema<TInput, TOutput>,
-    options: RequestInit = {},
+    options: ApiFetchOptions = {},
 ): Promise<ApiResponse<TOutput>> {
+    const { searchParams, ...fetchOptions } = options;
     let response: Response;
     try {
-        response = await fetch(`https://${PXLS_API_HOST}/pxls${path}`, options);
+        response = await fetch(buildApiFetchUrl(path, searchParams), {
+            credentials: 'include',
+            ...fetchOptions,
+        });
     } catch (e) {
         return {
             success: false,
@@ -49,10 +67,14 @@ export async function apiFetch<TInput, TOutput>(
     }
 }
 
-export async function binaryApiFetch(path: string, options: RequestInit = {}): Promise<ApiResponse<ArrayBuffer>> {
+export async function binaryApiFetch(path: string, options: ApiFetchOptions = {}): Promise<ApiResponse<ArrayBuffer>> {
+    const { searchParams, ...fetchOptions } = options;
     let response: Response;
     try {
-        response = await fetch(`https://${PXLS_API_HOST}/pxls${path}`, options);
+        response = await fetch(buildApiFetchUrl(path, searchParams), {
+            credentials: 'include',
+            ...fetchOptions,
+        });
     } catch (e) {
         return {
             success: false,

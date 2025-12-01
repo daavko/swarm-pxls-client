@@ -5,7 +5,7 @@
 </template>
 
 <script setup lang="ts">
-interface MdiIconProps {
+export interface MdiIconProps {
     iconPath: string;
     size?: number;
     inline?: boolean;

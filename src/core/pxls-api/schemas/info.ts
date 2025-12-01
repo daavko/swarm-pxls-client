@@ -64,8 +64,15 @@ export const InfoResponse = v.object({
     cooldownInfo: CooldownInfo,
     captchaKey: v.string(),
     heatmapCooldown: PositiveInteger,
-    maxStacked: PositiveInteger,
-    authServices: v.array(AuthService),
+    maxStacked: v.pipe(
+        PositiveInteger,
+        // I'd *really* like to understand why, but whoever made the API probably doesn't know either
+        v.transform((value) => value + 1),
+    ),
+    authServices: v.pipe(
+        v.record(v.string(), AuthService),
+        v.transform((data): AuthService[] => Object.values(data)),
+    ),
     registrationEnabled: v.boolean(),
     chatEnabled: v.boolean(),
     chatRespectsCanvasBan: v.boolean(),

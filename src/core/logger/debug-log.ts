@@ -3,18 +3,18 @@ import { useGeneralSettings } from '@/core/settings/use-general-settings.ts';
 
 interface DebugLogEntry {
     timestamp: Date;
-    message: string;
+    message: unknown[];
 }
 
-export const { log: logDebugMessage, useEntries: useDebugLog } = createLogger<DebugLogEntry, string>(
+export const { log: logDebugMessage, useEntries: useDebugLog } = createLogger<DebugLogEntry, unknown>(
     1000,
     () => {
         return useGeneralSettings().value.debugLogging;
     },
     (message) => {
-        return { timestamp: new Date(), message };
+        return { timestamp: new Date(), message: Array.isArray(message) ? message : [message] };
     },
     (entry) => {
-        console.debug(`${entry.timestamp.toISOString()}: ${entry.message}`);
+        console.debug(entry.timestamp.toISOString(), ...entry.message);
     },
 );

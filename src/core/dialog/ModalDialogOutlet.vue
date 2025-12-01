@@ -2,19 +2,18 @@
     <div class="dialog-outlet">
         <template v-for="dialog in openDialogs" :key="dialog.id">
             <div class="dialog-container">
-                <ModalDialog class="dialog"></ModalDialog>
-                <div
-                    v-if="dialog.options.backdrop"
-                    class="dialog-backdrop"
-                    @click.prevent="backdropClick(dialog)"></div>
+                <div v-if="dialog.backdrop" class="dialog-backdrop" @click.prevent="backdropClick(dialog)"></div>
+                <ModalDialog :dialog="dialog"></ModalDialog>
             </div>
         </template>
     </div>
 </template>
 
 <script setup lang="ts">
+import { useDialog } from '@/core/dialog/dialog.store.ts';
 import ModalDialog from '@/core/dialog/ModalDialog.vue';
-import { type Dialog, useDialog } from '@/core/dialog/use-dialog.ts';
+import type { Dialog } from '@/core/dialog/types.ts';
+import { useEventListener } from '@vueuse/core';
 import { storeToRefs } from 'pinia';
 import { watchEffect } from 'vue';
 
@@ -29,8 +28,17 @@ watchEffect(() => {
     }
 });
 
+useEventListener('keydown', (event: KeyboardEvent) => {
+    if (event.key === 'Escape' && openDialogs.value.length > 0) {
+        const topDialog = openDialogs.value[openDialogs.value.length - 1]!;
+        if (topDialog.closeOnEscape) {
+            closeDialog(topDialog.id);
+        }
+    }
+});
+
 function backdropClick(dialog: Dialog): void {
-    if (dialog.options.closeOnBackdropClick === true) {
+    if (dialog.closeOnBackdropClick) {
         closeDialog(dialog.id);
     }
 }
@@ -53,14 +61,6 @@ function backdropClick(dialog: Dialog): void {
     position: absolute;
     inset: 0;
     background-color: rgba(0, 0, 0, 0.4);
-    pointer-events: all;
-}
-
-.dialog {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
     pointer-events: all;
 }
 </style>

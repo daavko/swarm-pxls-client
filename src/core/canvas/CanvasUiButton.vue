@@ -1,11 +1,9 @@
 <template>
-    <button class="flex-center">
-        <MdiIcon :iconPath="iconPath"></MdiIcon>
-    </button>
+    <MdiIconButton :iconPath="iconPath"></MdiIconButton>
 </template>
 
 <script setup lang="ts">
-import MdiIcon from '@/core/common/MdiIcon.vue';
+import MdiIconButton from '@/core/common/MdiIconButton.vue';
 
 defineProps<{
     iconPath: string;
@@ -19,6 +17,7 @@ button {
     background: black;
     color: white;
     border-radius: 50%;
+    border: 2px solid #666666;
 
     &:hover {
         background: #333;

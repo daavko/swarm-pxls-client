@@ -26,7 +26,7 @@ export type AckMessage = v.InferOutput<typeof AckMessage>;
 const PixelCountsMessage = v.object({
     type: v.literal('pixelCounts'),
     pixelCount: NonNegativeInteger,
-    pixelCountAlltime: NonNegativeInteger,
+    pixelCountAllTime: NonNegativeInteger,
 });
 export type PixelCountsMessage = v.InferOutput<typeof PixelCountsMessage>;
 
@@ -39,15 +39,17 @@ export type ChatBanStateMessage = v.InferOutput<typeof ChatBanStateMessage>;
 
 const ChatMessageMessage = v.object({
     type: v.literal('chat_message'),
-    id: NonNegativeInteger,
-    author: v.string(),
-    date: SecondsDate,
-    message_raw: v.string(),
-    replyingToId: v.optional(NonNegativeInteger),
-    replyShouldMention: v.optional(v.boolean()),
-    badges: v.array(ChatBadge),
-    authorNameClass: v.optional(v.string()),
-    authorNameColor: NonNegativeInteger,
+    message: v.object({
+        id: NonNegativeInteger,
+        author: v.string(),
+        date: SecondsDate,
+        message_raw: v.string(),
+        replyingToId: v.optional(NonNegativeInteger),
+        replyShouldMention: v.optional(v.boolean()),
+        badges: v.array(ChatBadge),
+        authorNameClass: v.optional(v.string()),
+        authorNameColor: NonNegativeInteger,
+    }),
 });
 export type ChatMessageMessage = v.InferOutput<typeof ChatMessageMessage>;
 

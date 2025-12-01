@@ -16,7 +16,7 @@ const connectedEventBus = useEventBus(CANVAS_SOCKET_CONNECTED_BUS_KEY);
 const disconnectedEventBus = useEventBus(CANVAS_SOCKET_DISCONNECTED_BUS_KEY);
 
 export function usePxlsSocket(): UseWebSocketReturn<unknown> {
-    canvasSocket ??= useWebSocket(`${PXLS_SOCKET_ORIGIN}/pxls/ws`, {
+    canvasSocket ??= useWebSocket(`${PXLS_SOCKET_ORIGIN}/ws`, {
         immediate: false,
         onMessage: (_, event) => {
             try {

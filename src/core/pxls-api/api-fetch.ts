@@ -15,7 +15,7 @@ export interface ApiErrorResponse {
 export type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse;
 
 function buildApiFetchUrl(path: string, searchParams?: URLSearchParams): URL {
-    const url = new URL(`${PXLS_API_ORIGIN}/pxls${path}`);
+    const url = new URL(`${PXLS_API_ORIGIN}${path}`);
     if (searchParams) {
         url.search = searchParams.toString();
     }

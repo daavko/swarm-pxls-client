@@ -11,6 +11,7 @@
                                 userInfo.username
                             }}</router-link>
                         </p>
+                        <MdiIcon :iconPath="mdiLogout" :size="20" @click="logoutClick" class="cursor-pointer"></MdiIcon>
                     </div>
                     <div class="bubble-section__row">
                         <MdiIcon :iconPath="mdiChartLine" :size="20"></MdiIcon>
@@ -86,6 +87,7 @@ import {
     mdiClock,
     mdiCompass,
     mdiCube,
+    mdiLogout,
 } from '@mdi/js';
 import { computed, onBeforeMount, ref } from 'vue';
 import { useTypeAssistedCanvasInfo } from '@/core/canvas/canvas.store.ts';
@@ -97,6 +99,7 @@ import { useCooldownCountdown } from '@/core/session/use-cooldown-countdown.ts';
 const { usersLoadState, userCount } = storeToRefs(useUsersStore());
 const { loadUserCount } = useUsersStore();
 const { loggedIn, availablePixels, cooldown } = storeToRefs(useSession());
+const { logout } = useSession();
 const userInfo = useTypeAssistedSessionUserInfo();
 const info = useTypeAssistedCanvasInfo();
 
@@ -114,6 +117,10 @@ const formattedCooldown = useCooldownCountdown(true);
 
 function toggleExpanded(): void {
     expanded.value = !expanded.value;
+}
+
+function logoutClick(): void {
+    void logout();
 }
 
 onBeforeMount(() => {

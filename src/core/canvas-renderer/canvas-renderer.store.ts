@@ -1,9 +1,9 @@
 import { RenderLayer, type RenderLayerOptions } from '@/core/canvas-renderer/render-layer.ts';
 import { useLayerOptionsStorage } from '@/core/canvas-renderer/use-layer-options-storage.ts';
+import { getUniformMatrix } from '@/utils/matrix3.ts';
 import { syncRef } from '@vueuse/core';
 import { defineStore } from 'pinia';
 import { ref, shallowRef, triggerRef } from 'vue';
-import { getUniformMatrix } from '@/utils/matrix3.ts';
 
 export const useCanvasRenderer = defineStore('canvas-layers', () => {
     const layerOptionsStorage = useLayerOptionsStorage();
@@ -16,7 +16,8 @@ export const useCanvasRenderer = defineStore('canvas-layers', () => {
     const layerOptions = ref<RenderLayerOptions[]>(layerOptionsStorage.value);
     const glRef = shallowRef<WebGL2RenderingContext | null>(null);
 
-    syncRef(layerOptions, layerOptionsStorage, { deep: true });
+    // needs generic, see https://github.com/vueuse/vueuse/issues/4376
+    syncRef<RenderLayerOptions[], RenderLayerOptions[]>(layerOptions, layerOptionsStorage, { deep: true });
 
     function registerLayer(layer: RenderLayer): void {
         if (layers.value.some((l) => l.name === layer.name)) {

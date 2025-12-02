@@ -1,3 +1,4 @@
+import { useCanvasInitEventBus, useCanvasResetEventBus, usePixelEventBus } from '@/core/canvas/event-buses.ts';
 import { useSelectedColorStorage } from '@/core/canvas/use-selected-color-storage.ts';
 import { logDebugMessage } from '@/core/logger/debug-log.ts';
 import { logError } from '@/core/logger/error-log.ts';
@@ -6,14 +7,13 @@ import { PxlsApi } from '@/core/pxls-api/pxls-api.ts';
 import { InfoResponse } from '@/core/pxls-api/schemas/info.ts';
 import type { PixelMessage } from '@/core/pxls-socket/schemas/message-schemas.ts';
 import {
-    CANVAS_SOCKET_CONNECTED_BUS_KEY,
-    CANVAS_SOCKET_DISCONNECTED_BUS_KEY,
-    CANVAS_SOCKET_ERROR_BUS_KEY,
-    CANVAS_SOCKET_MESSAGE_BUS_KEY,
     usePxlsSocket,
+    usePxlsSocketConnectedEventBus,
+    usePxlsSocketErrorEventBus,
+    usePxlsSocketMessageEventBus,
 } from '@/core/pxls-socket/use-pxls-socket.ts';
 import { queueMacrotask } from '@/utils/task.ts';
-import { type EventBusKey, useEventBus, useInterval } from '@vueuse/core';
+import { useInterval } from '@vueuse/core';
 import { defineStore } from 'pinia';
 import { computed, type ComputedRef, type DeepReadonly, readonly, ref, shallowRef, watch } from 'vue';
 
@@ -28,8 +28,6 @@ type CanvasState =
     | 'running'
     | 'reconnecting';
 
-export const CANVAS_RESET_BUS_KEY: EventBusKey<void> = Symbol('Canvas reset event bus');
-
 const RECONNECT_DELAY_MS = 5000;
 
 // server sends pings every minute, so we use a very slightly longer timeout
@@ -38,23 +36,19 @@ const MESSAGE_TIMEOUT_CHECK_INTERVAL_MS = 1000;
 
 const PING_INTERVAL_MS = 15000;
 
-export interface RawCanvasBoard {
-    imageData: ImageData;
-    uint32View: Uint32Array;
-}
-
 export const useCanvas = defineStore('canvas', () => {
     const canvasSocket = usePxlsSocket();
-    const canvasSocketMessageBus = useEventBus(CANVAS_SOCKET_MESSAGE_BUS_KEY);
-    const canvasSocketErrorBus = useEventBus(CANVAS_SOCKET_ERROR_BUS_KEY);
-    const canvasSocketConnectedBus = useEventBus(CANVAS_SOCKET_CONNECTED_BUS_KEY);
-    const canvasSocketDisconnectedBus = useEventBus(CANVAS_SOCKET_DISCONNECTED_BUS_KEY);
-    const canvasResetBus = useEventBus(CANVAS_RESET_BUS_KEY);
+    const canvasSocketMessageBus = usePxlsSocketMessageEventBus();
+    const canvasSocketErrorBus = usePxlsSocketErrorEventBus();
+    const canvasSocketConnectedBus = usePxlsSocketConnectedEventBus();
+    const canvasSocketDisconnectedBus = usePxlsSocketConnectedEventBus();
+    const pixelEventBus = usePixelEventBus();
+    const canvasInitEventBus = useCanvasInitEventBus();
+    const canvasResetEventBus = useCanvasResetEventBus();
     const selectedColorStorage = useSelectedColorStorage();
 
     const state = ref<CanvasState>('beforeFirstConnect');
     const info = shallowRef<InfoResponse | null>(null);
-    const board = shallowRef<RawCanvasBoard | null>(null);
     const selectedColorIndex = ref<number | null>(null);
 
     selectedColorIndex.value = selectedColorStorage.value;
@@ -90,17 +84,16 @@ export const useCanvas = defineStore('canvas', () => {
     });
 
     canvasSocketMessageBus.on((message) => {
-        if (info.value == null || board.value == null || state.value !== 'running') {
+        if (info.value == null || state.value !== 'running') {
             return;
         }
 
         if (message.type === 'pixel') {
-            const { width, palette } = info.value;
+            const { palette } = info.value;
             message.pixels.forEach(({ x, y, color: colorIndex }) => {
                 const color = palette[colorIndex];
                 if (color) {
-                    const pixelIndex = y * width + x;
-                    board.value!.uint32View[pixelIndex] = color.rawRgba;
+                    pixelEventBus.emit({ x, y, colorIndex, colorRawRgba: color.rawRgba });
                 }
             });
         }
@@ -207,7 +200,7 @@ export const useCanvas = defineStore('canvas', () => {
                     infoResponse.width !== info.value.width ||
                     infoResponse.height !== info.value.height)
             ) {
-                canvasResetBus.emit();
+                canvasResetEventBus.emit();
             }
             info.value = infoResponse;
         }
@@ -274,10 +267,7 @@ export const useCanvas = defineStore('canvas', () => {
             });
         });
         const boardImageData = new ImageData(new Uint8ClampedArray(boardImageArray.buffer), width, height);
-        board.value = {
-            imageData: boardImageData,
-            uint32View: boardImageArray,
-        };
+        canvasInitEventBus.emit(boardImageData);
         state.value = 'running';
     }
 
@@ -315,7 +305,6 @@ export const useCanvas = defineStore('canvas', () => {
     return {
         state: readonly(state),
         info: readonly(info),
-        board: readonly(board),
         selectedColorIndex: readonly(selectedColorIndex),
         selectedColor: computed(() => {
             const infoValue = info.value;

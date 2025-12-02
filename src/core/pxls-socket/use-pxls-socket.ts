@@ -1,19 +1,41 @@
 import { PXLS_SOCKET_ORIGIN } from '@/core/pxls-api/const.ts';
 import { SocketClientMessage } from '@/core/pxls-socket/schemas/message-schemas.ts';
-import { type EventBusKey, useEventBus, useWebSocket, type UseWebSocketReturn } from '@vueuse/core';
+import {
+    type EventBusKey,
+    useEventBus,
+    type UseEventBusReturn,
+    useWebSocket,
+    type UseWebSocketReturn,
+} from '@vueuse/core';
 import * as v from 'valibot';
 
 let canvasSocket: UseWebSocketReturn<unknown> | undefined;
 
-export const CANVAS_SOCKET_MESSAGE_BUS_KEY: EventBusKey<SocketClientMessage> = Symbol('Canvas socket message bus');
-export const CANVAS_SOCKET_ERROR_BUS_KEY: EventBusKey<Event> = Symbol('Canvas socket error bus');
-export const CANVAS_SOCKET_CONNECTED_BUS_KEY: EventBusKey<void> = Symbol('Canvas socket connected bus');
-export const CANVAS_SOCKET_DISCONNECTED_BUS_KEY: EventBusKey<Event> = Symbol('Canvas socket disconnected bus');
+const CANVAS_SOCKET_MESSAGE_BUS_KEY: EventBusKey<SocketClientMessage> = Symbol('Canvas socket message bus');
+const CANVAS_SOCKET_ERROR_BUS_KEY: EventBusKey<Event> = Symbol('Canvas socket error bus');
+const CANVAS_SOCKET_CONNECTED_BUS_KEY: EventBusKey<void> = Symbol('Canvas socket connected bus');
+const CANVAS_SOCKET_DISCONNECTED_BUS_KEY: EventBusKey<Event> = Symbol('Canvas socket disconnected bus');
 
-const messageEventBus = useEventBus(CANVAS_SOCKET_MESSAGE_BUS_KEY);
-const errorEventBus = useEventBus(CANVAS_SOCKET_ERROR_BUS_KEY);
-const connectedEventBus = useEventBus(CANVAS_SOCKET_CONNECTED_BUS_KEY);
-const disconnectedEventBus = useEventBus(CANVAS_SOCKET_DISCONNECTED_BUS_KEY);
+export function usePxlsSocketMessageEventBus(): UseEventBusReturn<SocketClientMessage, unknown> {
+    return useEventBus(CANVAS_SOCKET_MESSAGE_BUS_KEY);
+}
+
+export function usePxlsSocketErrorEventBus(): UseEventBusReturn<Event, unknown> {
+    return useEventBus(CANVAS_SOCKET_ERROR_BUS_KEY);
+}
+
+export function usePxlsSocketConnectedEventBus(): UseEventBusReturn<void, unknown> {
+    return useEventBus(CANVAS_SOCKET_CONNECTED_BUS_KEY);
+}
+
+export function usePxlsSocketDisconnectedEventBus(): UseEventBusReturn<Event, unknown> {
+    return useEventBus(CANVAS_SOCKET_DISCONNECTED_BUS_KEY);
+}
+
+const messageEventBus = usePxlsSocketMessageEventBus();
+const errorEventBus = usePxlsSocketErrorEventBus();
+const connectedEventBus = usePxlsSocketConnectedEventBus();
+const disconnectedEventBus = usePxlsSocketDisconnectedEventBus();
 
 export function usePxlsSocket(): UseWebSocketReturn<unknown> {
     canvasSocket ??= useWebSocket(`${PXLS_SOCKET_ORIGIN}/ws`, {

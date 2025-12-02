@@ -1,14 +1,14 @@
 import { RenderLayer, type RenderLayerOptions } from '@/core/canvas-renderer/render-layer.ts';
-import { SimpleQuadRenderable } from '@/core/canvas-renderer/renderables/simple-quad-renderable.ts';
 import { Uint32RenderableTextureData } from '@/core/canvas-renderer/renderables/renderable-texture-data.ts';
+import { SimpleQuadRenderable } from '@/core/canvas-renderer/renderables/simple-quad-renderable.ts';
 
 class BoardRenderable extends SimpleQuadRenderable {
     protected activeProgram: WebGLProgram;
 
-    constructor(gl: WebGL2RenderingContext, imageData: ImageData) {
+    constructor(gl: WebGL2RenderingContext) {
         const textureData = new Uint32RenderableTextureData();
-        textureData.useTextureData(new Uint32Array(imageData.data.buffer), imageData.width, imageData.height);
-        super(gl, new DOMRect(0, 0, imageData.width, imageData.height), textureData);
+        textureData.useTextureData(board.uint32View, board.imageData.width, board.imageData.height);
+        super(gl, new DOMRect(0, 0, 0, 0), textureData);
 
         this.activeProgram = this.createProgram('', '');
     }
@@ -23,15 +23,8 @@ export class BoardLayer extends RenderLayer {
         enabled: true,
     };
 
-    private readonly imageData: ImageData;
-
-    constructor(imageData: ImageData) {
-        super();
-
-        this.imageData = imageData;
-    }
-
     createRenderables(gl: WebGL2RenderingContext): void {
-        this.renderables = [new BoardRenderable(gl, this.imageData)];
+        this.destroyRenderables();
+        this.renderables = [new BoardRenderable(gl)];
     }
 }

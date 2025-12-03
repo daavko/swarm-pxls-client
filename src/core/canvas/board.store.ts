@@ -2,7 +2,7 @@ import { useBoardInitEventBus, useBoardResetEventBus, usePixelEventBus } from '@
 import { defineStore } from 'pinia';
 import { shallowRef, triggerRef } from 'vue';
 
-interface CachedBoard {
+interface BoardView {
     imageData: ImageData;
     uint32View: Uint32Array;
 }
@@ -12,23 +12,23 @@ export const useBoardStore = defineStore('canvas-board', () => {
     const pixelEventBus = usePixelEventBus();
     const canvasResetEventBus = useBoardResetEventBus();
 
-    const board = shallowRef<CachedBoard | null>(null);
+    const board = shallowRef<BoardView | null>(null);
 
-    canvasInitEventBus.on((data) => {
+    canvasInitEventBus.on(({ board: { width, height, data } }) => {
         board.value = {
-            imageData: new ImageData(data.width, data.height),
-            uint32View: new Uint32Array(data.data.buffer),
+            imageData: new ImageData(width, height),
+            uint32View: new Uint32Array(data.buffer),
         };
-        board.value.imageData.data.set(data.data);
+        board.value.imageData.data.set(data);
     });
 
-    pixelEventBus.on((pixel) => {
+    pixelEventBus.on(({ x, y, colorRawRgba }) => {
         if (board.value == null) {
-            // shouldn't really happen, but who knows
             return;
         }
 
-        board.value.uint32View[pixel.y * board.value.imageData.width + pixel.x] = pixel.colorRawRgba;
+        const pixelIndex = y * board.value.imageData.width + x;
+        board.value.uint32View[pixelIndex] = colorRawRgba;
         triggerRef(board);
     });
 

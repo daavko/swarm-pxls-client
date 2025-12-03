@@ -1,8 +1,8 @@
 import { RenderLayer, type RenderLayerOptions } from '@/core/canvas-renderer/render-layer.ts';
 import { Uint32RenderableTextureData } from '@/core/canvas-renderer/renderables/renderable-texture-data.ts';
 import { SimpleQuadRenderable } from '@/core/canvas-renderer/renderables/simple-quad-renderable.ts';
-import { useBoardInitEventBus, useBoardResetEventBus, usePixelEventBus } from '@/core/canvas/event-buses.ts';
 import { useBoardStore } from '@/core/canvas/board.store.ts';
+import { useBoardInitEventBus, useBoardResetEventBus, usePixelEventBus } from '@/core/canvas/event-buses.ts';
 import type { Fn } from '@vueuse/core';
 
 class BoardRenderable extends SimpleQuadRenderable {
@@ -31,7 +31,7 @@ class BoardRenderable extends SimpleQuadRenderable {
 
         this.activeProgram = this.createProgram('', '');
 
-        this.boardInitOff = boardInitEventBus.on(({ width, height, data }) => {
+        this.boardInitOff = boardInitEventBus.on(({ board: { width, height, data } }) => {
             textureData.createBlankTextureData(width, height);
             textureData.data!.set(new Uint32Array(data.buffer));
             this.width = width;

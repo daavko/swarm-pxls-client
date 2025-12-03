@@ -267,7 +267,10 @@ export const useCanvas = defineStore('canvas', () => {
             });
         });
         const boardImageData = new ImageData(new Uint8ClampedArray(boardImageArray.buffer), width, height);
-        canvasInitEventBus.emit(boardImageData);
+        canvasInitEventBus.emit({
+            info: info.value,
+            board: boardImageData,
+        });
         state.value = 'running';
     }
 

@@ -4,11 +4,13 @@ import * as v from 'valibot';
 
 export interface ApiSuccessResponse<T> {
     success: true;
+    response: Response;
     data: T;
 }
 
 export interface ApiErrorResponse {
     success: false;
+    response?: Response;
     error: unknown;
 }
 
@@ -49,6 +51,7 @@ export async function apiFetch<TInput, TOutput>(
     if (response.status >= 400 && response.status <= 599) {
         return {
             success: false,
+            response,
             error: `API request failed with status ${response.status}`,
         };
     }
@@ -57,11 +60,13 @@ export async function apiFetch<TInput, TOutput>(
     if (parseResult.success) {
         return {
             success: true,
+            response,
             data: parseResult.output,
         };
     } else {
         return {
             success: false,
+            response,
             error: parseResult.issues,
         };
     }
@@ -84,12 +89,14 @@ export async function binaryApiFetch(path: string, options: ApiFetchOptions = {}
     if (response.status >= 400 && response.status <= 599) {
         return {
             success: false,
+            response,
             error: `API request failed with status ${response.status}`,
         };
     }
     const data = await response.arrayBuffer();
     return {
         success: true,
+        response,
         data,
     };
 }

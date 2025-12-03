@@ -15,9 +15,9 @@ export function usePixelEventBus(): UseEventBusReturn<PixelEvent, unknown> {
     return useEventBus(PIXEL_EVENT_BUS_KEY);
 }
 
-export function useCanvasInitEventBus(): UseEventBusReturn<ImageData, unknown> {
+export function useBoardInitEventBus(): UseEventBusReturn<ImageData, unknown> {
     return useEventBus(BOARD_INIT_EVENT_BUS_KEY);
 }
-export function useCanvasResetEventBus(): UseEventBusReturn<void, unknown> {
+export function useBoardResetEventBus(): UseEventBusReturn<void, unknown> {
     return useEventBus(BOARD_RESET_EVENT_BUS_KEY);
 }

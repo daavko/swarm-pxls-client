@@ -5,6 +5,13 @@ import { syncRef } from '@vueuse/core';
 import { defineStore } from 'pinia';
 import { ref, shallowRef, triggerRef } from 'vue';
 
+// todo: rewrite layers and layerOptions to use this instead
+//  will need to write a custom transform for the syncRef
+interface RenderLayerInternal {
+    options: RenderLayerOptions;
+    layer?: RenderLayer;
+}
+
 export const useCanvasRenderer = defineStore('canvas-layers', () => {
     const layerOptionsStorage = useLayerOptionsStorage();
 
@@ -51,6 +58,7 @@ export const useCanvasRenderer = defineStore('canvas-layers', () => {
     function renderContextCreated(gl: WebGL2RenderingContext): void {
         glRef.value = gl;
         for (const layer of layers.value) {
+            layer.destroyRenderables();
             layer.createRenderables(gl);
         }
     }
@@ -74,6 +82,7 @@ export const useCanvasRenderer = defineStore('canvas-layers', () => {
 
         const uniformMatrix = new Float32Array(getUniformMatrix(width, height, x.value, y.value, scale.value));
 
+        // todo: take options into account
         for (const layer of layers.value) {
             layer.render(uniformMatrix);
         }

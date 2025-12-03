@@ -29,6 +29,10 @@ export abstract class QuadRenderable extends Renderable {
         return this._rect;
     }
 
+    protected get canRender(): boolean {
+        return this.width > 0 && this.height > 0;
+    }
+
     set x(value: number) {
         this._rect.x = value;
         this.updateVertexBufferData();
@@ -50,6 +54,10 @@ export abstract class QuadRenderable extends Renderable {
     }
 
     override render(projectionMatrixUniform: Float32Array): void {
+        if (!this.canRender) {
+            return;
+        }
+
         this.prepareRenderingContext(projectionMatrixUniform);
 
         const { gl } = this;

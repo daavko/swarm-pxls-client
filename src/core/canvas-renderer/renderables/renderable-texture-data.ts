@@ -20,13 +20,25 @@ export abstract class RenderableTextureData<T extends TextureDataArray> {
     }
 
     createBlankTextureData(width: number, height: number): void {
+        if (this.textureData != null) {
+            this.changed = true;
+        }
         this.size = { width, height };
         this.textureData = this.dataArrayCtor(width * height);
     }
 
     useTextureData(data: T, width: number, height: number): void {
+        if (this.textureData != null) {
+            this.changed = true;
+        }
         this.size = { width, height };
         this.textureData = data;
+    }
+
+    resetTextureData(): void {
+        this.textureData = null;
+        this.size = null;
+        this.changed = false;
     }
 
     getPixelByIndex(index: number): number | undefined {

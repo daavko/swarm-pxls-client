@@ -16,6 +16,10 @@ export abstract class SimpleQuadRenderable extends QuadRenderable {
         this.dataProvider = dataProvider;
     }
 
+    protected override get canRender(): boolean {
+        return super.canRender && this.dataProvider.data != null;
+    }
+
     protected override bindBuffers(): void {
         super.bindBuffers();
 

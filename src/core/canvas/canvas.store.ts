@@ -1,4 +1,4 @@
-import { useCanvasInitEventBus, useCanvasResetEventBus, usePixelEventBus } from '@/core/canvas/event-buses.ts';
+import { useBoardInitEventBus, useBoardResetEventBus, usePixelEventBus } from '@/core/canvas/event-buses.ts';
 import { useSelectedColorStorage } from '@/core/canvas/use-selected-color-storage.ts';
 import { logDebugMessage } from '@/core/logger/debug-log.ts';
 import { logError } from '@/core/logger/error-log.ts';
@@ -43,8 +43,8 @@ export const useCanvas = defineStore('canvas', () => {
     const canvasSocketConnectedBus = usePxlsSocketConnectedEventBus();
     const canvasSocketDisconnectedBus = usePxlsSocketConnectedEventBus();
     const pixelEventBus = usePixelEventBus();
-    const canvasInitEventBus = useCanvasInitEventBus();
-    const canvasResetEventBus = useCanvasResetEventBus();
+    const canvasInitEventBus = useBoardInitEventBus();
+    const canvasResetEventBus = useBoardResetEventBus();
     const selectedColorStorage = useSelectedColorStorage();
 
     const state = ref<CanvasState>('beforeFirstConnect');

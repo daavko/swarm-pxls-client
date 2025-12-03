@@ -255,6 +255,8 @@ export const useCanvas = defineStore('canvas', () => {
             const color = palette[colorIndex];
             if (color) {
                 boardImageArray[pixelIndex] = color.rawRgba;
+            } else {
+                boardImageArray[pixelIndex] = 0;
             }
         });
         bufferedPixels.forEach(({ pixels }) => {

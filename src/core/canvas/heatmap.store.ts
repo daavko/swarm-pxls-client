@@ -25,16 +25,16 @@ function timestampFromHeatmapValue(generationTimestamp: number, cooldown: number
 }
 
 export const useHeatmapStore = defineStore('canvas-heatmap', () => {
-    const canvasInitEventBus = useBoardInitEventBus();
+    const boardInitEventBus = useBoardInitEventBus();
     const pixelEventBus = usePixelEventBus();
-    const canvasResetEventBus = useBoardResetEventBus();
+    const boardResetEventBus = useBoardResetEventBus();
 
     const size = ref<Size | null>(null);
     const heatmap = shallowRef<Uint32Array | null>(null);
     const loadState = ref<ApiRequestState>('idle');
     const heatmapCooldown = ref<number | null>(null);
 
-    canvasInitEventBus.on(({ info }) => {
+    boardInitEventBus.on(({ info }) => {
         size.value = { width: info.width, height: info.height };
         heatmap.value = null;
         loadState.value = 'idle';
@@ -51,7 +51,7 @@ export const useHeatmapStore = defineStore('canvas-heatmap', () => {
         triggerRef(heatmap);
     });
 
-    canvasResetEventBus.on(() => {
+    boardResetEventBus.on(() => {
         size.value = null;
         heatmap.value = null;
         loadState.value = 'idle';

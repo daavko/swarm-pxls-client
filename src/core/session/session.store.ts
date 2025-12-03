@@ -1,11 +1,11 @@
 import { useCanvas } from '@/core/canvas/canvas.store.ts';
 import { PxlsApi } from '@/core/pxls-api/pxls-api.ts';
 import type { UserinfoMessage } from '@/core/pxls-socket/schemas/message-schemas.ts';
-import { CANVAS_SOCKET_MESSAGE_BUS_KEY } from '@/core/pxls-socket/use-pxls-socket.ts';
 import { useSessionAuthFlowStorage } from '@/core/session/use-session-auth-flow-storage.ts';
-import { useEventBus, useRafFn } from '@vueuse/core';
+import { useRafFn } from '@vueuse/core';
 import { defineStore } from 'pinia';
 import { computed, type ComputedRef, type DeepReadonly, ref } from 'vue';
+import { usePxlsSocketMessageEventBus } from '@/core/pxls-socket/use-pxls-socket.ts';
 
 export type UserInfo = Omit<UserinfoMessage, 'type'>;
 
@@ -16,7 +16,7 @@ export interface PixelCooldown {
 }
 
 export const useSession = defineStore('session', () => {
-    const canvasSocketMessageBus = useEventBus(CANVAS_SOCKET_MESSAGE_BUS_KEY);
+    const canvasSocketMessageBus = usePxlsSocketMessageEventBus();
     const authFlowStorage = useSessionAuthFlowStorage();
     const { scheduleImmediateReconnect } = useCanvas();
 

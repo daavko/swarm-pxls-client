@@ -1,71 +1,122 @@
 import { RenderLayer, type RenderLayerOptions } from '@/core/canvas-renderer/render-layer.ts';
 import { useLayerOptionsStorage } from '@/core/canvas-renderer/use-layer-options-storage.ts';
 import { getUniformMatrix } from '@/utils/matrix3.ts';
-import { syncRef } from '@vueuse/core';
 import { defineStore } from 'pinia';
-import { ref, shallowRef, triggerRef } from 'vue';
+import { ref, shallowRef, triggerRef, watch } from 'vue';
+import { BoardLayer } from '@/core/canvas-renderer/board.ts';
+import { useCanvas } from '@/core/canvas/canvas.store.ts';
+import { useCanvasPanScaleStorage } from '@/core/canvas-renderer/use-canvas-pan-scale-storage.ts';
 
-// todo: rewrite layers and layerOptions to use this instead
-//  will need to write a custom transform for the syncRef
-interface RenderLayerInternal {
-    options: RenderLayerOptions;
-    layer?: RenderLayer;
+interface RenderLayerInternal extends RenderLayerOptions {
+    renderLayer?: RenderLayer;
+}
+
+function areOptionsEqual(a: RenderLayerOptions, b: RenderLayerOptions): boolean {
+    return a.name === b.name && a.enabled === b.enabled && a.opacity === b.opacity;
+}
+
+function anyOptionsChanged(a: RenderLayerOptions[], b: RenderLayerOptions[]): boolean {
+    if (a.length !== b.length) {
+        return true;
+    }
+
+    for (let i = 0; i < a.length; i++) {
+        if (!areOptionsEqual(a[i]!, b[i]!)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function layersToOptions(layers: RenderLayerInternal[]): RenderLayerOptions[] {
+    return layers.map(({ name, enabled, opacity }) => ({ name, enabled, opacity }));
 }
 
 export const useCanvasRenderer = defineStore('canvas-layers', () => {
     const layerOptionsStorage = useLayerOptionsStorage();
+    const canvasPanScaleStorage = useCanvasPanScaleStorage();
+    const canvasStore = useCanvas();
 
-    const x = ref<number>(0);
-    const y = ref<number>(0);
-    const scale = ref<number>(1);
+    const x = ref<number | null>(canvasPanScaleStorage.value?.x ?? null);
+    const y = ref<number | null>(canvasPanScaleStorage.value?.y ?? null);
+    const scale = ref<number | null>(canvasPanScaleStorage.value?.scale ?? null);
 
-    const layers = shallowRef<RenderLayer[]>([]);
-    const layerOptions = ref<RenderLayerOptions[]>(layerOptionsStorage.value);
+    const newLayers = shallowRef<RenderLayerInternal[]>([]);
     const glRef = shallowRef<WebGL2RenderingContext | null>(null);
 
-    // needs generic, see https://github.com/vueuse/vueuse/issues/4376
-    syncRef<RenderLayerOptions[], RenderLayerOptions[]>(layerOptions, layerOptionsStorage, { deep: true });
+    watch([x, y, scale], ([newX, newY, newScale]) => {
+        if (newX != null && newY != null && newScale != null) {
+            canvasPanScaleStorage.value = { x: newX, y: newY, scale: newScale };
+        }
+    });
+
+    watch(newLayers, (newValue, oldValue) => {
+        if (anyOptionsChanged(oldValue, newValue) && anyOptionsChanged(layerOptionsStorage.value, newValue)) {
+            layerOptionsStorage.value = layersToOptions(newValue);
+        }
+    });
+
+    watch(layerOptionsStorage, (newVal) => {
+        const currentOptions = layersToOptions(newLayers.value);
+        if (anyOptionsChanged(newVal, currentOptions)) {
+            // update options in newLayers
+            for (const option of newVal) {
+                const layerOption = newLayers.value.find((l) => l.name === option.name);
+                if (layerOption) {
+                    layerOption.enabled = option.enabled;
+                    layerOption.opacity = option.opacity;
+                } else {
+                    newLayers.value.push({ ...option });
+                }
+            }
+            triggerRef(newLayers);
+        }
+    });
 
     function registerLayer(layer: RenderLayer): void {
-        if (layers.value.some((l) => l.name === layer.name)) {
-            console.warn(`Layer with name "${layer.name}" is already registered.`);
-            return;
-        }
-
-        layers.value.push(layer);
-
-        if (!layerOptions.value.some((opt) => opt.name === layer.name)) {
-            layerOptions.value.push(layer.defaultOptions);
+        const existingLayer = newLayers.value.find((l) => l.name === layer.name);
+        if (existingLayer) {
+            if (existingLayer.renderLayer != null) {
+                console.warn(`Layer with name "${layer.name}" is already registered.`);
+                return;
+            }
+            existingLayer.renderLayer = layer;
+        } else {
+            newLayers.value.push({
+                ...layer.defaultOptions,
+                renderLayer: layer,
+            });
         }
 
         if (glRef.value) {
             layer.createRenderables(glRef.value);
         }
 
-        triggerRef(layers);
+        triggerRef(newLayers);
     }
 
     function unregisterLayer(layerName: string): void {
-        const layerIndex = layers.value.findIndex((l) => l.name === layerName);
+        const layerIndex = newLayers.value.findIndex((l) => l.name === layerName);
         if (layerIndex !== -1) {
-            const [layer] = layers.value.splice(layerIndex, 1);
-            layer?.destroyRenderables();
+            const [layer] = newLayers.value.splice(layerIndex, 1);
+            layer?.renderLayer?.destroyRenderables();
         }
 
-        triggerRef(layers);
+        triggerRef(newLayers);
     }
 
     function renderContextCreated(gl: WebGL2RenderingContext): void {
         glRef.value = gl;
-        for (const layer of layers.value) {
-            layer.destroyRenderables();
-            layer.createRenderables(gl);
+        for (const layer of newLayers.value) {
+            layer.renderLayer?.destroyRenderables();
+            layer.renderLayer?.createRenderables(gl);
         }
     }
 
     function renderContextDestroyed(): void {
-        for (const layer of layers.value) {
-            layer.destroyRenderables();
+        for (const layer of newLayers.value) {
+            layer.renderLayer?.destroyRenderables();
         }
         glRef.value = null;
     }
@@ -80,20 +131,38 @@ export const useCanvasRenderer = defineStore('canvas-layers', () => {
         gl.clearColor(26 / 255, 26 / 255, 26 / 255, 1);
         gl.clear(gl.COLOR_BUFFER_BIT);
 
+        if (x.value == null) {
+            if (canvasStore.info == null) {
+                x.value = 0;
+            } else {
+                x.value = canvasStore.info.width / 2;
+            }
+        }
+        if (y.value == null) {
+            if (canvasStore.info == null) {
+                y.value = 0;
+            } else {
+                y.value = canvasStore.info.height / 2;
+            }
+        }
+        if (scale.value == null) {
+            scale.value = 1;
+        }
         const uniformMatrix = new Float32Array(getUniformMatrix(width, height, x.value, y.value, scale.value));
 
-        // todo: take options into account
-        for (const layer of layers.value) {
-            layer.render(uniformMatrix);
+        for (const layer of newLayers.value) {
+            if (layer.enabled && layer.opacity > 0 && layer.renderLayer) {
+                layer.renderLayer.render(uniformMatrix);
+            }
         }
     }
+
+    registerLayer(new BoardLayer());
 
     return {
         x,
         y,
         scale,
-        layers,
-        layerOptions,
         gl: glRef,
         registerLayer,
         unregisterLayer,

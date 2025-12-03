@@ -63,7 +63,7 @@ import CanvasUiButton from '@/core/canvas/CanvasUiButton.vue';
 import CursorInfoAttachment from '@/core/canvas/CursorInfoAttachment.vue';
 import PaletteBar from '@/core/canvas/PaletteBar.vue';
 import { useDialog } from '@/core/dialog/dialog.store.ts';
-import { CANVAS_SOCKET_MESSAGE_BUS_KEY } from '@/core/pxls-socket/use-pxls-socket.ts';
+import { usePxlsSocketMessageEventBus } from '@/core/pxls-socket/use-pxls-socket.ts';
 import AuthDialog from '@/core/session/AuthDialog.vue';
 import AuthFinishDialog from '@/core/session/AuthFinishDialog.vue';
 import { useSession, useTypeAssistedSessionUserInfo } from '@/core/session/session.store.ts';
@@ -77,7 +77,7 @@ import {
     mdiInformationOutline,
     mdiLockOpenOutline,
 } from '@mdi/js';
-import { useEventBus, useTitle } from '@vueuse/core';
+import { useTitle } from '@vueuse/core';
 import { storeToRefs } from 'pinia';
 import { computed, onBeforeMount, onMounted, ref } from 'vue';
 
@@ -89,7 +89,7 @@ const { createDialog } = useDialog();
 const authFlowStorage = useSessionAuthFlowStorage();
 
 // TODO: temporary
-const canvasSocketMessageBus = useEventBus(CANVAS_SOCKET_MESSAGE_BUS_KEY);
+const canvasSocketMessageBus = usePxlsSocketMessageEventBus();
 const messages = ref<string[]>([]);
 
 const cooldownMilliseconds = computed(() => cooldown.value?.millisecondsLeft);

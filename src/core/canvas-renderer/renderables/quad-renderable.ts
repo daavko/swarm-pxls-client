@@ -30,7 +30,7 @@ export abstract class QuadRenderable extends Renderable {
     }
 
     protected get canRender(): boolean {
-        return this.width > 0 && this.height > 0;
+        return this._rect.width > 0 && this._rect.height > 0;
     }
 
     set x(value: number) {

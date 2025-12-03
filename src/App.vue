@@ -7,11 +7,10 @@
 import ModalDialogOutlet from '@/core/dialog/ModalDialogOutlet.vue';
 import { useDialog } from '@/core/dialog/dialog.store.ts';
 import ModAlertDialog from '@/core/misc/ModAlertDialog.vue';
-import { CANVAS_SOCKET_MESSAGE_BUS_KEY } from '@/core/pxls-socket/use-pxls-socket.ts';
-import { useEventBus } from '@vueuse/core';
+import { usePxlsSocketMessageEventBus } from '@/core/pxls-socket/use-pxls-socket.ts';
 
 const { createDialog } = useDialog();
-const canvasSocketMessageBus = useEventBus(CANVAS_SOCKET_MESSAGE_BUS_KEY);
+const canvasSocketMessageBus = usePxlsSocketMessageEventBus();
 
 canvasSocketMessageBus.on((message) => {
     if (message.type === 'alert') {

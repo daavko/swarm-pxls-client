@@ -8,13 +8,13 @@ interface BoardView {
 }
 
 export const useBoardStore = defineStore('canvas-board', () => {
-    const canvasInitEventBus = useBoardInitEventBus();
+    const boardInitEventBus = useBoardInitEventBus();
     const pixelEventBus = usePixelEventBus();
-    const canvasResetEventBus = useBoardResetEventBus();
+    const boardResetEventBus = useBoardResetEventBus();
 
     const board = shallowRef<BoardView | null>(null);
 
-    canvasInitEventBus.on(({ board: { width, height, data } }) => {
+    boardInitEventBus.on(({ board: { width, height, data } }) => {
         board.value = {
             imageData: new ImageData(width, height),
             uint32View: new Uint32Array(data.buffer),
@@ -32,7 +32,7 @@ export const useBoardStore = defineStore('canvas-board', () => {
         triggerRef(board);
     });
 
-    canvasResetEventBus.on(() => {
+    boardResetEventBus.on(() => {
         board.value = null;
     });
 

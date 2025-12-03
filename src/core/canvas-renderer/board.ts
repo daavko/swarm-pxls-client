@@ -1,6 +1,8 @@
 import { RenderLayer, type RenderLayerOptions } from '@/core/canvas-renderer/render-layer.ts';
 import { Uint32RenderableTextureData } from '@/core/canvas-renderer/renderables/renderable-texture-data.ts';
 import { SimpleQuadRenderable } from '@/core/canvas-renderer/renderables/simple-quad-renderable.ts';
+import simpleRectVertexShaderSource from '@/core/canvas-renderer/shaders/simple-rect.vert?raw';
+import simpleTextureFragmentShaderSource from '@/core/canvas-renderer/shaders/simple-texture.frag?raw';
 import { useBoardStore } from '@/core/canvas/board.store.ts';
 import { useBoardInitEventBus, useBoardResetEventBus, usePixelEventBus } from '@/core/canvas/event-buses.ts';
 import type { Fn } from '@vueuse/core';
@@ -29,7 +31,7 @@ class BoardRenderable extends SimpleQuadRenderable {
         }
         super(gl, new DOMRect(0, 0, initialWidth, initialHeight), textureData);
 
-        this.activeProgram = this.createProgram('', '');
+        this.activeProgram = this.createProgram(simpleRectVertexShaderSource, simpleTextureFragmentShaderSource);
 
         this.boardInitOff = boardInitEventBus.on(({ board: { width, height, data } }) => {
             textureData.createBlankTextureData(width, height);
@@ -50,6 +52,19 @@ class BoardRenderable extends SimpleQuadRenderable {
         this.boardResetOff();
         this.pixelPlacedOff();
         super.destroy();
+    }
+
+    override prepareRenderingContext(projectionMatrixUniform: Float32Array): void {
+        super.prepareRenderingContext(projectionMatrixUniform);
+
+        const { gl } = this;
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    }
+
+    override teardownRenderingContext(): void {
+        super.teardownRenderingContext();
+        const { gl } = this;
+        gl.blendFunc(gl.ONE, gl.ZERO);
     }
 }
 

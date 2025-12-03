@@ -59,7 +59,7 @@ onMounted(() => {
         }
     }
 
-    void router.replace({ query: { ...route.query, x: null, y: null, scale: null } });
+    void router.replace({ query: { ...route.query, x: undefined, y: undefined, scale: undefined } });
 
     canvasRenderer.renderContextCreated(gl);
 

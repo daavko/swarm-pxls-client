@@ -1,11 +1,11 @@
+import { BoardLayer } from '@/core/canvas-renderer/board.ts';
 import { RenderLayer, type RenderLayerOptions } from '@/core/canvas-renderer/render-layer.ts';
+import { useCanvasPanScaleStorage } from '@/core/canvas-renderer/use-canvas-pan-scale-storage.ts';
 import { useLayerOptionsStorage } from '@/core/canvas-renderer/use-layer-options-storage.ts';
+import { useCanvas } from '@/core/canvas/canvas.store.ts';
 import { getUniformMatrix } from '@/utils/matrix3.ts';
 import { defineStore } from 'pinia';
 import { ref, shallowRef, triggerRef, watch } from 'vue';
-import { BoardLayer } from '@/core/canvas-renderer/board.ts';
-import { useCanvas } from '@/core/canvas/canvas.store.ts';
-import { useCanvasPanScaleStorage } from '@/core/canvas-renderer/use-canvas-pan-scale-storage.ts';
 
 interface RenderLayerInternal extends RenderLayerOptions {
     renderLayer?: RenderLayer;
@@ -121,34 +121,38 @@ export const useCanvasRenderer = defineStore('canvas-layers', () => {
         glRef.value = null;
     }
 
-    function render(width: number, height: number): void {
+    function render(viewportWidth: number, viewportHeight: number): void {
         const gl = glRef.value;
         if (!gl) {
             return;
         }
 
-        gl.viewport(0, 0, width, height);
+        gl.viewport(0, 0, viewportWidth, viewportHeight);
         gl.clearColor(26 / 255, 26 / 255, 26 / 255, 1);
         gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.enable(gl.BLEND);
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
-        if (x.value == null) {
-            if (canvasStore.info == null) {
-                x.value = 0;
-            } else {
-                x.value = canvasStore.info.width / 2;
-            }
+        if (x.value == null && canvasStore.info != null) {
+            x.value = canvasStore.info.width / 2;
         }
-        if (y.value == null) {
-            if (canvasStore.info == null) {
-                y.value = 0;
-            } else {
-                y.value = canvasStore.info.height / 2;
-            }
+        if (y.value == null && canvasStore.info != null) {
+            y.value = canvasStore.info.height / 2;
         }
+
+        if (x.value == null || y.value == null) {
+            return;
+        }
+
         if (scale.value == null) {
             scale.value = 1;
         }
-        const uniformMatrix = new Float32Array(getUniformMatrix(width, height, x.value, y.value, scale.value));
+
+        const uniformX = viewportWidth / 2 - x.value * scale.value;
+        const uniformY = viewportHeight / 2 - y.value * scale.value;
+        const uniformMatrix = new Float32Array(
+            getUniformMatrix(viewportWidth, viewportHeight, uniformX, uniformY, scale.value),
+        );
 
         for (const layer of newLayers.value) {
             if (layer.enabled && layer.opacity > 0 && layer.renderLayer) {

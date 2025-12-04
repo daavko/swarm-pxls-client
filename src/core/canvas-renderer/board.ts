@@ -53,19 +53,6 @@ class BoardRenderable extends SimpleQuadRenderable {
         this.pixelPlacedOff();
         super.destroy();
     }
-
-    override prepareRenderingContext(projectionMatrixUniform: Float32Array): void {
-        super.prepareRenderingContext(projectionMatrixUniform);
-
-        const { gl } = this;
-        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-    }
-
-    override teardownRenderingContext(): void {
-        super.teardownRenderingContext();
-        const { gl } = this;
-        gl.blendFunc(gl.ONE, gl.ZERO);
-    }
 }
 
 export class BoardLayer extends RenderLayer {

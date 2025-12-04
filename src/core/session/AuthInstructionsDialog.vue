@@ -1,6 +1,8 @@
 <template>
     <div class="container">
         <h2>Login / registration instructions</h2>
+        <h3>WARNING: THIS IS AN EXPERIMENTAL CLIENT IN DEVELOPMENT.</h3>
+        <h3>DISCLAIMER: THE AUTHOR OF THIS CLIENT IS NOT RESPONSIBLE FOR ANY BANS ARISING FROM ITS USE.</h3>
         <p>
             Logging in on this client is a bit different from normal Pxls.
             <strong>Pay attention to the instructions</strong>.
@@ -54,6 +56,10 @@ onMounted(() => {
 
 h2 {
     text-align: center;
+    margin-bottom: 16px;
+}
+
+h3 {
     margin-bottom: 16px;
 }
 

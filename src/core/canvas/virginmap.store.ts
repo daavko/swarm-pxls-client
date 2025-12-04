@@ -1,16 +1,16 @@
-import { defineStore } from 'pinia';
 import {
     type PixelEvent,
     useBoardInitEventBus,
     useBoardResetEventBus,
     usePixelEventBus,
 } from '@/core/canvas/event-buses.ts';
-import { ref, triggerRef } from 'vue';
-import type { Size } from '@/utils/geometry.ts';
-import type { ApiRequestState } from '@/core/pxls-api/api-request-state.ts';
-import type { ApiResponse } from '@/core/pxls-api/api-fetch.ts';
-import { PxlsApi } from '@/core/pxls-api/pxls-api.ts';
 import { logError } from '@/core/logger/error-log.ts';
+import type { ApiResponse } from '@/core/pxls-api/api-fetch.ts';
+import type { ApiRequestState } from '@/core/pxls-api/api-request-state.ts';
+import { PxlsApi } from '@/core/pxls-api/pxls-api.ts';
+import type { Size } from '@/utils/geometry.ts';
+import { defineStore } from 'pinia';
+import { ref, triggerRef } from 'vue';
 
 export const useVirginmapStore = defineStore('canvas-virginmap', () => {
     const canvasInitEventBus = useBoardInitEventBus();

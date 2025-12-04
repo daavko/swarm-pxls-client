@@ -48,7 +48,7 @@ onMounted(() => {
         content: { component: AuthInstructionsDialog },
         closeOnEscape: false,
         closeOnBackdropClick: false,
-        noCloseButton: false,
+        noCloseButton: true,
     });
 });
 

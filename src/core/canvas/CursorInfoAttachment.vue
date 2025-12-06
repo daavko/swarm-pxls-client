@@ -6,12 +6,12 @@
 </template>
 
 <script setup lang="ts">
-import { useCanvas, useTypeAssistedCanvasInfo } from '@/core/canvas/canvas.store.ts';
+import { useCanvasStore, useTypeAssistedCanvasInfo } from '@/core/canvas/canvas.store.ts';
 import { useSession } from '@/core/session/session.store.ts';
 import { useMouse } from '@vueuse/core';
 import { storeToRefs } from 'pinia';
 
-const { selectedColor } = storeToRefs(useCanvas());
+const { selectedColor } = storeToRefs(useCanvasStore());
 const info = useTypeAssistedCanvasInfo();
 const { availablePixels } = storeToRefs(useSession());
 const { x, y } = useMouse({ type: 'page' });

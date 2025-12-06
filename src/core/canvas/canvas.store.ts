@@ -12,6 +12,7 @@ import {
     usePxlsSocketErrorEventBus,
     usePxlsSocketMessageEventBus,
 } from '@/core/pxls-socket/use-pxls-socket.ts';
+import type { Point } from '@/utils/geometry.ts';
 import { queueMacrotask } from '@/utils/task.ts';
 import { useInterval } from '@vueuse/core';
 import { defineStore } from 'pinia';
@@ -36,7 +37,7 @@ const MESSAGE_TIMEOUT_CHECK_INTERVAL_MS = 1000;
 
 const PING_INTERVAL_MS = 15000;
 
-export const useCanvas = defineStore('canvas', () => {
+export const useCanvasStore = defineStore('canvas', () => {
     const canvasSocket = usePxlsSocket();
     const canvasSocketMessageBus = usePxlsSocketMessageEventBus();
     const canvasSocketErrorBus = usePxlsSocketErrorEventBus();
@@ -50,6 +51,7 @@ export const useCanvas = defineStore('canvas', () => {
     const state = ref<CanvasState>('beforeFirstConnect');
     const info = shallowRef<InfoResponse | null>(null);
     const selectedColorIndex = ref<number | null>(null);
+    const hoveredPixelPosition = ref<Point | null>(null);
 
     selectedColorIndex.value = selectedColorStorage.value;
 
@@ -323,12 +325,13 @@ export const useCanvas = defineStore('canvas', () => {
             }
             return null;
         }),
+        hoveredPixelPosition,
         scheduleImmediateReconnect,
         selectColor,
     };
 });
 
 export function useTypeAssistedCanvasInfo(): ComputedRef<DeepReadonly<InfoResponse> | null> {
-    const canvasStore = useCanvas();
+    const canvasStore = useCanvasStore();
     return computed(() => canvasStore.info);
 }

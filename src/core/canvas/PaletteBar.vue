@@ -40,13 +40,13 @@
 </template>
 
 <script setup lang="ts">
-import { useCanvas } from '@/core/canvas/canvas.store.ts';
+import { useCanvasStore } from '@/core/canvas/canvas.store.ts';
 import MdiIconButton from '@/core/common/MdiIconButton.vue';
 import { mdiChevronRight, mdiCloseThick } from '@mdi/js';
 import { storeToRefs } from 'pinia';
 import { ref } from 'vue';
 
-const canvas = useCanvas();
+const canvas = useCanvasStore();
 const { info, selectedColorIndex, selectedColor } = storeToRefs(canvas);
 
 const collapsed = ref(true);

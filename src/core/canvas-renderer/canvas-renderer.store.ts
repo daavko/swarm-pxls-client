@@ -1,11 +1,10 @@
 import { BoardLayer } from '@/core/canvas-renderer/board.ts';
 import { RenderLayer, type RenderLayerOptions } from '@/core/canvas-renderer/render-layer.ts';
-import { useCanvasPanScaleStorage } from '@/core/canvas-renderer/use-canvas-pan-scale-storage.ts';
+import { useCanvasPannerStore } from '@/core/canvas-renderer/canvas-panner.store.ts';
 import { useLayerOptionsStorage } from '@/core/canvas-renderer/use-layer-options-storage.ts';
-import { useCanvas } from '@/core/canvas/canvas.store.ts';
-import { getUniformMatrix } from '@/utils/matrix3.ts';
-import { defineStore } from 'pinia';
-import { ref, shallowRef, triggerRef, watch } from 'vue';
+import { getViewportTransformMatrix } from '@/utils/matrix3.ts';
+import { defineStore, storeToRefs } from 'pinia';
+import { computed, readonly, ref, shallowRef, triggerRef, watch } from 'vue';
 
 interface RenderLayerInternal extends RenderLayerOptions {
     renderLayer?: RenderLayer;
@@ -35,47 +34,75 @@ function layersToOptions(layers: RenderLayerInternal[]): RenderLayerOptions[] {
 
 export const useCanvasRenderer = defineStore('canvas-layers', () => {
     const layerOptionsStorage = useLayerOptionsStorage();
-    const canvasPanScaleStorage = useCanvasPanScaleStorage();
-    const canvasStore = useCanvas();
+    const { x: panX, y: panY, scale } = storeToRefs(useCanvasPannerStore());
 
-    const x = ref<number | null>(canvasPanScaleStorage.value?.x ?? null);
-    const y = ref<number | null>(canvasPanScaleStorage.value?.y ?? null);
-    const scale = ref<number | null>(canvasPanScaleStorage.value?.scale ?? null);
-
-    const newLayers = shallowRef<RenderLayerInternal[]>([]);
-    const glRef = shallowRef<WebGL2RenderingContext | null>(null);
-
-    watch([x, y, scale], ([newX, newY, newScale]) => {
-        if (newX != null && newY != null && newScale != null) {
-            canvasPanScaleStorage.value = { x: newX, y: newY, scale: newScale };
+    const viewportWidth = ref<number | null>(null);
+    const viewportHeight = ref<number | null>(null);
+    const viewportX = computed((): number | null => {
+        if (panX.value == null || scale.value == null || viewportWidth.value == null) {
+            return null;
+        } else {
+            return viewportWidth.value / 2 - panX.value * scale.value;
         }
     });
+    const viewportY = computed((): number | null => {
+        if (panY.value == null || scale.value == null || viewportHeight.value == null) {
+            return null;
+        } else {
+            return viewportHeight.value / 2 - panY.value * scale.value;
+        }
+    });
+    const transformMatrix = shallowRef<Float32Array | null>(null);
+    const layers = shallowRef<RenderLayerInternal[]>([]);
+    const glRef = shallowRef<WebGL2RenderingContext | null>(null);
 
-    watch(newLayers, (newValue, oldValue) => {
+    watch(
+        [viewportX, viewportY, scale, viewportWidth, viewportHeight],
+        ([newX, newY, newScale, newWidth, newHeight]) => {
+            if (newX == null || newY == null || newScale == null || newWidth == null || newHeight == null) {
+                transformMatrix.value = null;
+            } else {
+                transformMatrix.value = getViewportTransformMatrix(
+                    newWidth,
+                    newHeight,
+                    newX,
+                    newY,
+                    newScale,
+                    transformMatrix.value,
+                );
+            }
+            triggerRef(transformMatrix);
+        },
+        {
+            immediate: true,
+            flush: 'sync',
+        },
+    );
+
+    watch(layers, (newValue, oldValue) => {
         if (anyOptionsChanged(oldValue, newValue) && anyOptionsChanged(layerOptionsStorage.value, newValue)) {
             layerOptionsStorage.value = layersToOptions(newValue);
         }
     });
 
     watch(layerOptionsStorage, (newVal) => {
-        const currentOptions = layersToOptions(newLayers.value);
+        const currentOptions = layersToOptions(layers.value);
         if (anyOptionsChanged(newVal, currentOptions)) {
-            // update options in newLayers
             for (const option of newVal) {
-                const layerOption = newLayers.value.find((l) => l.name === option.name);
+                const layerOption = layers.value.find((l) => l.name === option.name);
                 if (layerOption) {
                     layerOption.enabled = option.enabled;
                     layerOption.opacity = option.opacity;
                 } else {
-                    newLayers.value.push({ ...option });
+                    layers.value.push({ ...option });
                 }
             }
-            triggerRef(newLayers);
+            triggerRef(layers);
         }
     });
 
     function registerLayer(layer: RenderLayer): void {
-        const existingLayer = newLayers.value.find((l) => l.name === layer.name);
+        const existingLayer = layers.value.find((l) => l.name === layer.name);
         if (existingLayer) {
             if (existingLayer.renderLayer != null) {
                 console.warn(`Layer with name "${layer.name}" is already registered.`);
@@ -83,7 +110,7 @@ export const useCanvasRenderer = defineStore('canvas-layers', () => {
             }
             existingLayer.renderLayer = layer;
         } else {
-            newLayers.value.push({
+            layers.value.push({
                 ...layer.defaultOptions,
                 renderLayer: layer,
             });
@@ -93,70 +120,60 @@ export const useCanvasRenderer = defineStore('canvas-layers', () => {
             layer.createRenderables(glRef.value);
         }
 
-        triggerRef(newLayers);
+        triggerRef(layers);
     }
 
     function unregisterLayer(layerName: string): void {
-        const layerIndex = newLayers.value.findIndex((l) => l.name === layerName);
+        const layerIndex = layers.value.findIndex((l) => l.name === layerName);
         if (layerIndex !== -1) {
-            const [layer] = newLayers.value.splice(layerIndex, 1);
+            const [layer] = layers.value.splice(layerIndex, 1);
             layer?.renderLayer?.destroyRenderables();
         }
 
-        triggerRef(newLayers);
+        triggerRef(layers);
     }
 
     function renderContextCreated(gl: WebGL2RenderingContext): void {
         glRef.value = gl;
-        for (const layer of newLayers.value) {
+        for (const layer of layers.value) {
             layer.renderLayer?.destroyRenderables();
             layer.renderLayer?.createRenderables(gl);
         }
     }
 
     function renderContextDestroyed(): void {
-        for (const layer of newLayers.value) {
+        for (const layer of layers.value) {
             layer.renderLayer?.destroyRenderables();
         }
         glRef.value = null;
     }
 
-    function render(viewportWidth: number, viewportHeight: number): void {
+    function render(): void {
+        const viewportWidthValue = viewportWidth.value;
+        const viewportHeightValue = viewportHeight.value;
+        if (viewportWidthValue == null || viewportHeightValue == null) {
+            return;
+        }
+
+        const viewportTransformMatrix = transformMatrix.value;
+        if (viewportTransformMatrix == null) {
+            return;
+        }
+
         const gl = glRef.value;
         if (!gl) {
             return;
         }
 
-        gl.viewport(0, 0, viewportWidth, viewportHeight);
+        gl.viewport(0, 0, viewportWidthValue, viewportHeightValue);
         gl.clearColor(26 / 255, 26 / 255, 26 / 255, 1);
         gl.clear(gl.COLOR_BUFFER_BIT);
         gl.enable(gl.BLEND);
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
-        if (x.value == null && canvasStore.info != null) {
-            x.value = canvasStore.info.width / 2;
-        }
-        if (y.value == null && canvasStore.info != null) {
-            y.value = canvasStore.info.height / 2;
-        }
-
-        if (x.value == null || y.value == null) {
-            return;
-        }
-
-        if (scale.value == null) {
-            scale.value = 1;
-        }
-
-        const uniformX = viewportWidth / 2 - x.value * scale.value;
-        const uniformY = viewportHeight / 2 - y.value * scale.value;
-        const uniformMatrix = new Float32Array(
-            getUniformMatrix(viewportWidth, viewportHeight, uniformX, uniformY, scale.value),
-        );
-
-        for (const layer of newLayers.value) {
+        for (const layer of layers.value) {
             if (layer.enabled && layer.opacity > 0 && layer.renderLayer) {
-                layer.renderLayer.render(uniformMatrix);
+                layer.renderLayer.render(viewportTransformMatrix);
             }
         }
     }
@@ -164,10 +181,12 @@ export const useCanvasRenderer = defineStore('canvas-layers', () => {
     registerLayer(new BoardLayer());
 
     return {
-        x,
-        y,
-        scale,
+        viewportWidth,
+        viewportHeight,
+        viewportX: readonly(viewportX),
+        viewportY: readonly(viewportY),
         gl: glRef,
+        glTransformMatrix: readonly(transformMatrix),
         registerLayer,
         unregisterLayer,
         renderContextCreated,

@@ -1,4 +1,4 @@
-import { useCanvas } from '@/core/canvas/canvas.store.ts';
+import { useCanvasStore } from '@/core/canvas/canvas.store.ts';
 import { PxlsApi } from '@/core/pxls-api/pxls-api.ts';
 import type { UserinfoMessage } from '@/core/pxls-socket/schemas/message-schemas.ts';
 import { usePxlsSocketMessageEventBus } from '@/core/pxls-socket/use-pxls-socket.ts';
@@ -18,7 +18,7 @@ export interface PixelCooldown {
 export const useSession = defineStore('session', () => {
     const canvasSocketMessageBus = usePxlsSocketMessageEventBus();
     const authFlowStorage = useSessionAuthFlowStorage();
-    const { scheduleImmediateReconnect } = useCanvas();
+    const { scheduleImmediateReconnect } = useCanvasStore();
 
     const cooldownTickerWorker = new Worker(new URL('@/workers/cooldown-ticker.worker.ts', import.meta.url));
     const cooldownTickerRaf = useRafFn(

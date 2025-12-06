@@ -1,10 +1,6 @@
 <template>
     <div class="canvas-container">
         <CanvasRenderer></CanvasRenderer>
-        <div class="msglog">
-            <p>Last 25 messages</p>
-            <p v-for="(message, index) in messages" :key="index">{{ message }}</p>
-        </div>
     </div>
     <CursorInfoAttachment v-if="loggedIn"></CursorInfoAttachment>
     <div class="ui">
@@ -56,19 +52,20 @@
 </template>
 
 <script setup lang="ts">
+import { useCanvasPannerStore } from '@/core/canvas-renderer/canvas-panner.store.ts';
 import CanvasRenderer from '@/core/canvas-renderer/CanvasRenderer.vue';
-import { useCanvas } from '@/core/canvas/canvas.store.ts';
+import { useCanvasStore } from '@/core/canvas/canvas.store.ts';
 import CanvasInfoBubble from '@/core/canvas/CanvasInfoBubble.vue';
 import CanvasUiButton from '@/core/canvas/CanvasUiButton.vue';
 import CursorInfoAttachment from '@/core/canvas/CursorInfoAttachment.vue';
 import PaletteBar from '@/core/canvas/PaletteBar.vue';
 import { useDialog } from '@/core/dialog/dialog.store.ts';
-import { usePxlsSocketMessageEventBus } from '@/core/pxls-socket/use-pxls-socket.ts';
 import AuthDialog from '@/core/session/AuthDialog.vue';
 import AuthFinishDialog from '@/core/session/AuthFinishDialog.vue';
 import { useSession, useTypeAssistedSessionUserInfo } from '@/core/session/session.store.ts';
 import { useSessionAuthFlowStorage } from '@/core/session/use-session-auth-flow-storage.ts';
 import { useCooldownFormat } from '@/utils/format.ts';
+import { useIntegerQueryParam } from '@/utils/router.ts';
 import {
     mdiBellOutline,
     mdiChatOutline,
@@ -79,18 +76,18 @@ import {
 } from '@mdi/js';
 import { useTitle } from '@vueuse/core';
 import { storeToRefs } from 'pinia';
-import { computed, onBeforeMount, onMounted, ref } from 'vue';
+import { computed, onBeforeMount, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 
-const { state, info } = storeToRefs(useCanvas());
-const { scheduleImmediateReconnect } = useCanvas();
+const { state, info } = storeToRefs(useCanvasStore());
+const { scheduleImmediateReconnect } = useCanvasStore();
 const { loggedIn, availablePixels, cooldown } = storeToRefs(useSession());
 const userInfo = useTypeAssistedSessionUserInfo();
 const { createDialog } = useDialog();
 const authFlowStorage = useSessionAuthFlowStorage();
-
-// TODO: temporary
-const canvasSocketMessageBus = usePxlsSocketMessageEventBus();
-const messages = ref<string[]>([]);
+const route = useRoute();
+const router = useRouter();
+const canvasPanner = useCanvasPannerStore();
 
 const cooldownMilliseconds = computed(() => cooldown.value?.millisecondsLeft);
 const formattedCooldown = useCooldownFormat(cooldownMilliseconds, false);
@@ -123,13 +120,23 @@ onMounted(() => {
             noCloseButton: true,
         });
     }
-});
 
-canvasSocketMessageBus.on((message) => {
-    if (messages.value.length > 25) {
-        messages.value.shift();
+    const queryX = useIntegerQueryParam('x');
+    if (queryX.value != null) {
+        canvasPanner.forceX(queryX.value);
     }
-    messages.value.push(JSON.stringify(message));
+
+    const queryY = useIntegerQueryParam('y');
+    if (queryY.value != null) {
+        canvasPanner.forceY(queryY.value);
+    }
+
+    const queryScale = useIntegerQueryParam('scale');
+    if (queryScale.value != null) {
+        canvasPanner.forceScale(queryScale.value);
+    }
+
+    void router.replace({ query: { ...route.query, x: undefined, y: undefined, scale: undefined } });
 });
 
 function openAuthDialog(): void {
@@ -147,22 +154,6 @@ function openAuthDialog(): void {
 .canvas-container {
     width: 100dvw;
     height: 100dvh;
-
-    /* todo: tmp */
-    position: relative;
-    .msglog {
-        color: white;
-        text-align: center;
-        position: absolute;
-        inset: 5rem;
-        overflow: hidden;
-        pointer-events: none;
-
-        p {
-            max-width: 100%;
-            overflow-wrap: break-word;
-        }
-    }
 }
 
 .ui {

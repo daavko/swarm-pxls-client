@@ -23,7 +23,7 @@ class BoardRenderable extends SimpleQuadRenderable {
         const textureData = new Uint32RenderableTextureData();
         let initialWidth = 0;
         let initialHeight = 0;
-        if (boardStore.board != null) {
+        if (boardStore.board) {
             initialWidth = boardStore.board.imageData.width;
             initialHeight = boardStore.board.imageData.height;
             textureData.createBlankTextureData(initialWidth, initialHeight);
@@ -34,8 +34,7 @@ class BoardRenderable extends SimpleQuadRenderable {
         this.activeProgram = this.createProgram(simpleRectVertexShaderSource, simpleTextureFragmentShaderSource);
 
         this.boardInitOff = boardInitEventBus.on(({ board: { width, height, data } }) => {
-            textureData.createBlankTextureData(width, height);
-            textureData.data!.set(new Uint32Array(data.buffer));
+            textureData.useTextureData(new Uint32Array(data.buffer), width, height);
             this.width = width;
             this.height = height;
         });

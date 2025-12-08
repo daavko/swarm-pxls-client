@@ -6,7 +6,7 @@ const numberFormatter = new Intl.NumberFormat(undefined, {});
 export function useFormatNumber(value: MaybeRefOrGetter<number | null | undefined>): ComputedRef<string> {
     const valueRef = toRef(value);
     return computed(() => {
-        if (valueRef.value === null || valueRef.value === undefined) {
+        if (valueRef.value == null) {
             return '';
         }
         return numberFormatter.format(valueRef.value);
@@ -21,7 +21,7 @@ export function useCooldownFormat(
     const showMsRef = toRef(showMilliseconds);
 
     return computed(() => {
-        if (msRef.value === null || msRef.value === undefined) {
+        if (msRef.value == null) {
             return '';
         }
 

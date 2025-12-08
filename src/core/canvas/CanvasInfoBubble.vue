@@ -32,10 +32,13 @@
                     </p>
                 </div>
 
-                <!-- TODO: cursor location -->
                 <div class="bubble-section__row">
                     <MdiIcon :iconPath="mdiCompass" :size="20"></MdiIcon>
-                    <p class="text-underline"><a @click.prevent="">(TODO, TODO)</a></p>
+                    <p class="text-underline">
+                        <a @click.prevent=""
+                            >({{ mouseBoardCoords?.x ?? '???' }}, {{ mouseBoardCoords?.y ?? '???' }})</a
+                        >
+                    </p>
                 </div>
 
                 <div v-if="showAvailablePixels" class="bubble-section__row">
@@ -95,6 +98,7 @@ import { useSession, useTypeAssistedSessionUserInfo } from '@/core/session/sessi
 import { useFormatNumber } from '@/utils/format.ts';
 import { storeToRefs } from 'pinia';
 import { useCooldownCountdown } from '@/core/session/use-cooldown-countdown.ts';
+import { useCanvasViewportStore } from '@/core/canvas-renderer/canvas-viewport.store.ts';
 
 const { usersLoadState, userCount } = storeToRefs(useUsersStore());
 const { loadUserCount } = useUsersStore();
@@ -102,6 +106,7 @@ const { loggedIn, availablePixels, cooldown } = storeToRefs(useSession());
 const { logout } = useSession();
 const userInfo = useTypeAssistedSessionUserInfo();
 const info = useTypeAssistedCanvasInfo();
+const { mouseBoardCoords } = storeToRefs(useCanvasViewportStore());
 
 const expanded = ref(true);
 
@@ -130,7 +135,7 @@ onBeforeMount(() => {
 
 <style scoped>
 .bubble {
-    background-color: rgba(0, 0, 0, 0.7);
+    background-color: rgba(0, 0, 0, 0.85);
     color: white;
     border-radius: 8px;
     overflow: hidden;

@@ -49,10 +49,12 @@ export abstract class SimpleQuadRenderable extends QuadRenderable {
         if (typeof changed === 'boolean') {
             if (changed) {
                 this.fillFullTextureData(this.gl);
+                this.dataProvider.clearDataChanged();
             }
         } else {
             if (changed.length > 0) {
                 this.fillPartialTextureData(this.gl, changed);
+                this.dataProvider.clearDataChanged();
             }
         }
     }
@@ -67,7 +69,7 @@ export abstract class SimpleQuadRenderable extends QuadRenderable {
 
     private fillFullTextureData(gl: WebGL2RenderingContext): void {
         const data = this.dataProvider.data;
-        if (data == null) {
+        if (!data) {
             return;
         }
 
@@ -87,7 +89,7 @@ export abstract class SimpleQuadRenderable extends QuadRenderable {
 
     private fillPartialTextureData(gl: WebGL2RenderingContext, changedRegions: ChangedRegionDefinition[]): void {
         const data = this.dataProvider.data;
-        if (data == null) {
+        if (!data) {
             return;
         }
 

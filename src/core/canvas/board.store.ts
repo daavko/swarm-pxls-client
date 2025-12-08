@@ -23,7 +23,7 @@ export const useBoardStore = defineStore('canvas-board', () => {
     });
 
     pixelEventBus.on(({ x, y, colorRawRgba }) => {
-        if (board.value == null) {
+        if (!board.value) {
             return;
         }
 

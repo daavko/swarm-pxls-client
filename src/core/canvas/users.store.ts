@@ -18,7 +18,7 @@ export const useUsersStore = defineStore('users', () => {
     });
 
     async function loadUserCount(): Promise<void> {
-        if (userCount.value !== null || usersLoadState.value === 'loading' || usersLoadState.value === 'success') {
+        if (userCount.value != null || usersLoadState.value === 'loading' || usersLoadState.value === 'success') {
             return;
         }
 

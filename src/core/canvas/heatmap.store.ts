@@ -42,7 +42,7 @@ export const useHeatmapStore = defineStore('canvas-heatmap', () => {
     });
 
     pixelEventBus.on(({ x, y }) => {
-        if (size.value == null || heatmap.value == null || loadState.value !== 'success') {
+        if (!size.value || !heatmap.value || loadState.value !== 'success') {
             return;
         }
 
@@ -76,7 +76,7 @@ export const useHeatmapStore = defineStore('canvas-heatmap', () => {
 
     async function loadHeatmap(): Promise<void> {
         if (
-            size.value == null ||
+            !size.value ||
             heatmapCooldown.value == null ||
             loadState.value === 'loading' ||
             loadState.value === 'success'
@@ -94,7 +94,7 @@ export const useHeatmapStore = defineStore('canvas-heatmap', () => {
         const heatmapResponse = await fetchHeatmapData();
         const loadEndTime = Date.now();
         pixelListenerStop();
-        if (heatmapResponse == null) {
+        if (!heatmapResponse) {
             loadState.value = 'error';
             return;
         }

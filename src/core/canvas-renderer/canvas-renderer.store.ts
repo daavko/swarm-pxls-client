@@ -1,10 +1,10 @@
 import { BoardLayer } from '@/core/canvas-renderer/board.ts';
+import { useCanvasViewportStore } from '@/core/canvas-renderer/canvas-viewport.store.ts';
 import { RenderLayer, type RenderLayerOptions } from '@/core/canvas-renderer/render-layer.ts';
-import { useCanvasPannerStore } from '@/core/canvas-renderer/canvas-panner.store.ts';
 import { useLayerOptionsStorage } from '@/core/canvas-renderer/use-layer-options-storage.ts';
 import { getViewportTransformMatrix } from '@/utils/matrix3.ts';
 import { defineStore, storeToRefs } from 'pinia';
-import { computed, readonly, ref, shallowRef, triggerRef, watch } from 'vue';
+import { markRaw, readonly, shallowReactive, shallowRef, triggerRef, watch } from 'vue';
 
 interface RenderLayerInternal extends RenderLayerOptions {
     renderLayer?: RenderLayer;
@@ -34,39 +34,25 @@ function layersToOptions(layers: RenderLayerInternal[]): RenderLayerOptions[] {
 
 export const useCanvasRenderer = defineStore('canvas-layers', () => {
     const layerOptionsStorage = useLayerOptionsStorage();
-    const { x: panX, y: panY, scale } = storeToRefs(useCanvasPannerStore());
+    const { viewportSize, viewportOffset, scale } = storeToRefs(useCanvasViewportStore());
 
-    const viewportWidth = ref<number | null>(null);
-    const viewportHeight = ref<number | null>(null);
-    const viewportX = computed((): number | null => {
-        if (panX.value == null || scale.value == null || viewportWidth.value == null) {
-            return null;
-        } else {
-            return viewportWidth.value / 2 - panX.value * scale.value;
-        }
-    });
-    const viewportY = computed((): number | null => {
-        if (panY.value == null || scale.value == null || viewportHeight.value == null) {
-            return null;
-        } else {
-            return viewportHeight.value / 2 - panY.value * scale.value;
-        }
-    });
     const transformMatrix = shallowRef<Float32Array | null>(null);
-    const layers = shallowRef<RenderLayerInternal[]>([]);
+    const layers = shallowRef<RenderLayerInternal[]>(shallowReactive([]));
     const glRef = shallowRef<WebGL2RenderingContext | null>(null);
 
     watch(
-        [viewportX, viewportY, scale, viewportWidth, viewportHeight],
-        ([newX, newY, newScale, newWidth, newHeight]) => {
-            if (newX == null || newY == null || newScale == null || newWidth == null || newHeight == null) {
+        [viewportOffset, scale, viewportSize],
+        ([offset, newScale, size]) => {
+            if (!offset || newScale == null || !size) {
                 transformMatrix.value = null;
             } else {
+                const { x, y } = offset;
+                const { width, height } = size;
                 transformMatrix.value = getViewportTransformMatrix(
-                    newWidth,
-                    newHeight,
-                    newX,
-                    newY,
+                    width,
+                    height,
+                    x,
+                    y,
                     newScale,
                     transformMatrix.value,
                 );
@@ -76,14 +62,19 @@ export const useCanvasRenderer = defineStore('canvas-layers', () => {
         {
             immediate: true,
             flush: 'sync',
+            deep: true,
         },
     );
 
-    watch(layers, (newValue, oldValue) => {
-        if (anyOptionsChanged(oldValue, newValue) && anyOptionsChanged(layerOptionsStorage.value, newValue)) {
-            layerOptionsStorage.value = layersToOptions(newValue);
-        }
-    });
+    watch(
+        layers,
+        (newValue, oldValue) => {
+            if (anyOptionsChanged(layerOptionsStorage.value, newValue) || anyOptionsChanged(oldValue, newValue)) {
+                layerOptionsStorage.value = layersToOptions(newValue);
+            }
+        },
+        { flush: 'post' },
+    );
 
     watch(layerOptionsStorage, (newVal) => {
         const currentOptions = layersToOptions(layers.value);
@@ -94,10 +85,9 @@ export const useCanvasRenderer = defineStore('canvas-layers', () => {
                     layerOption.enabled = option.enabled;
                     layerOption.opacity = option.opacity;
                 } else {
-                    layers.value.push({ ...option });
+                    layers.value.push(shallowReactive({ ...option }));
                 }
             }
-            triggerRef(layers);
         }
     });
 
@@ -108,19 +98,21 @@ export const useCanvasRenderer = defineStore('canvas-layers', () => {
                 console.warn(`Layer with name "${layer.name}" is already registered.`);
                 return;
             }
+            markRaw(layer);
             existingLayer.renderLayer = layer;
         } else {
-            layers.value.push({
-                ...layer.defaultOptions,
-                renderLayer: layer,
-            });
+            markRaw(layer);
+            layers.value.push(
+                shallowReactive({
+                    ...layer.defaultOptions,
+                    renderLayer: layer,
+                }),
+            );
         }
 
         if (glRef.value) {
             layer.createRenderables(glRef.value);
         }
-
-        triggerRef(layers);
     }
 
     function unregisterLayer(layerName: string): void {
@@ -129,8 +121,6 @@ export const useCanvasRenderer = defineStore('canvas-layers', () => {
             const [layer] = layers.value.splice(layerIndex, 1);
             layer?.renderLayer?.destroyRenderables();
         }
-
-        triggerRef(layers);
     }
 
     function renderContextCreated(gl: WebGL2RenderingContext): void {
@@ -149,27 +139,25 @@ export const useCanvasRenderer = defineStore('canvas-layers', () => {
     }
 
     function render(): void {
-        const viewportWidthValue = viewportWidth.value;
-        const viewportHeightValue = viewportHeight.value;
-        if (viewportWidthValue == null || viewportHeightValue == null) {
-            return;
-        }
-
-        const viewportTransformMatrix = transformMatrix.value;
-        if (viewportTransformMatrix == null) {
-            return;
-        }
-
         const gl = glRef.value;
         if (!gl) {
             return;
         }
 
-        gl.viewport(0, 0, viewportWidthValue, viewportHeightValue);
+        if (!viewportSize.value) {
+            return;
+        }
+
+        gl.viewport(0, 0, viewportSize.value.width, viewportSize.value.height);
         gl.clearColor(26 / 255, 26 / 255, 26 / 255, 1);
         gl.clear(gl.COLOR_BUFFER_BIT);
         gl.enable(gl.BLEND);
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
+        const viewportTransformMatrix = transformMatrix.value;
+        if (!viewportTransformMatrix) {
+            return;
+        }
 
         for (const layer of layers.value) {
             if (layer.enabled && layer.opacity > 0 && layer.renderLayer) {
@@ -181,10 +169,6 @@ export const useCanvasRenderer = defineStore('canvas-layers', () => {
     registerLayer(new BoardLayer());
 
     return {
-        viewportWidth,
-        viewportHeight,
-        viewportX: readonly(viewportX),
-        viewportY: readonly(viewportY),
         gl: glRef,
         glTransformMatrix: readonly(transformMatrix),
         registerLayer,

@@ -4,7 +4,7 @@ export function compileShader(
     shaderType: WebGL2RenderingContext['VERTEX_SHADER'] | WebGL2RenderingContext['FRAGMENT_SHADER'],
 ): WebGLShader {
     const shader = gl.createShader(shaderType);
-    if (shader == null) {
+    if (!shader) {
         throw new Error('Failed to create shader');
     }
     gl.shaderSource(shader, source);

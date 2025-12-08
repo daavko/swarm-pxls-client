@@ -40,8 +40,8 @@
                     <small
                         >By logging in or registering, you agree to the
                         <a :href="info.legal.termsUrl" target="_blank">terms of use</a> and
-                        <a :href="info.legal.privacyUrl" target="_blank">privacy policy</a></small
-                    >.
+                        <a :href="info.legal.privacyUrl" target="_blank">privacy policy</a> of Pxls.</small
+                    >
                 </p>
                 <p>
                     <small>This is an <strong>unofficial</strong> Pxls canvas client.</small>
@@ -52,7 +52,7 @@
 </template>
 
 <script setup lang="ts">
-import { useCanvasPannerStore } from '@/core/canvas-renderer/canvas-panner.store.ts';
+import { useCanvasViewportStore } from '@/core/canvas-renderer/canvas-viewport.store.ts';
 import CanvasRenderer from '@/core/canvas-renderer/CanvasRenderer.vue';
 import { useCanvasStore } from '@/core/canvas/canvas.store.ts';
 import CanvasInfoBubble from '@/core/canvas/CanvasInfoBubble.vue';
@@ -87,7 +87,7 @@ const { createDialog } = useDialog();
 const authFlowStorage = useSessionAuthFlowStorage();
 const route = useRoute();
 const router = useRouter();
-const canvasPanner = useCanvasPannerStore();
+const { pan, scale } = storeToRefs(useCanvasViewportStore());
 
 const cooldownMilliseconds = computed(() => cooldown.value?.millisecondsLeft);
 const formattedCooldown = useCooldownFormat(cooldownMilliseconds, false);
@@ -122,18 +122,14 @@ onMounted(() => {
     }
 
     const queryX = useIntegerQueryParam('x');
-    if (queryX.value != null) {
-        canvasPanner.forceX(queryX.value);
-    }
-
     const queryY = useIntegerQueryParam('y');
-    if (queryY.value != null) {
-        canvasPanner.forceY(queryY.value);
+    if (queryX.value != null && queryY.value != null && pan != null) {
+        pan.value = { x: queryX.value, y: queryY.value };
     }
 
     const queryScale = useIntegerQueryParam('scale');
     if (queryScale.value != null) {
-        canvasPanner.forceScale(queryScale.value);
+        scale.value = queryScale.value;
     }
 
     void router.replace({ query: { ...route.query, x: undefined, y: undefined, scale: undefined } });
@@ -250,7 +246,7 @@ function openAuthDialog(): void {
 
 .ui-auth-alert {
     padding: 16px;
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(0, 0, 0, 0.85);
     color: white;
 }
 </style>

@@ -1,4 +1,3 @@
-import { PXLS_API_ORIGIN } from '@/core/pxls-api/const.ts';
 import type { GenericSchema } from 'valibot';
 import * as v from 'valibot';
 
@@ -17,7 +16,7 @@ export interface ApiErrorResponse {
 export type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse;
 
 function buildApiFetchUrl(path: string, searchParams?: URLSearchParams): URL {
-    const url = new URL(`${PXLS_API_ORIGIN}${path}`);
+    const url = new URL(`${__PXLS_API_BASE_URL__}${path}`, window.location.origin);
     if (searchParams) {
         url.search = searchParams.toString();
     }

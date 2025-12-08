@@ -12,7 +12,7 @@ import {
     usePxlsSocketErrorEventBus,
     usePxlsSocketMessageEventBus,
 } from '@/core/pxls-socket/use-pxls-socket.ts';
-import type { Point } from '@/utils/geometry.ts';
+import type { Point, Size } from '@/utils/geometry.ts';
 import { queueMacrotask } from '@/utils/task.ts';
 import { useInterval } from '@vueuse/core';
 import { defineStore } from 'pinia';
@@ -197,7 +197,7 @@ export const useCanvasStore = defineStore('canvas', () => {
             return;
         } else {
             if (
-                info.value != null &&
+                info.value &&
                 (infoResponse.canvasCode !== info.value.canvasCode ||
                     infoResponse.width !== info.value.width ||
                     infoResponse.height !== info.value.height)
@@ -312,6 +312,13 @@ export const useCanvasStore = defineStore('canvas', () => {
     return {
         state: readonly(state),
         info: readonly(info),
+        size: computed((): Size | null => {
+            const infoValue = info.value;
+            if (infoValue) {
+                return { width: infoValue.width, height: infoValue.height };
+            }
+            return null;
+        }),
         selectedColorIndex: readonly(selectedColorIndex),
         selectedColor: computed(() => {
             const infoValue = info.value;

@@ -44,14 +44,14 @@ export const useSession = defineStore('session', () => {
     }
 
     function cooldownTickerUpdate(): void {
-        if (cooldown.value === null) {
+        if (!cooldown.value) {
             return;
         }
 
         const millisecondsLeft = cooldown.value.endsAt.getTime() - Date.now();
         if (millisecondsLeft <= 0) {
             stopCooldownTicking();
-            if (availablePixels.value !== null) {
+            if (availablePixels.value != null) {
                 availablePixels.value += 1;
             }
         } else {
@@ -65,22 +65,18 @@ export const useSession = defineStore('session', () => {
 
     canvasSocketMessageBus.on((message) => {
         if (message.type === 'userinfo') {
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars -- intentionally omit type
             const { type, ...rest } = message;
             userInfo.value = rest;
-        } else if (message.type === 'pixels' && userInfo.value !== null) {
+        } else if (message.type === 'pixels' && userInfo.value) {
             availablePixels.value = message.count;
-        } else if (message.type === 'pixelCounts' && userInfo.value !== null) {
+        } else if (message.type === 'pixelCounts' && userInfo.value) {
             const { pixelCount, pixelCountAllTime } = message;
             userInfo.value.pixelCount = pixelCount;
             userInfo.value.pixelCountAllTime = pixelCountAllTime;
         } else if (message.type === 'cooldown') {
             if (message.wait === 0) {
-                // cooldownTickerWorker.postMessage('stop');
-                // cooldown.value = null;
                 stopCooldownTicking();
             } else {
-                // cooldownTickerWorker.postMessage('start');
                 startCooldownTicking();
                 cooldown.value = {
                     startedAt: new Date(),

@@ -28,7 +28,7 @@ export const useVirginmapStore = defineStore('canvas-virginmap', () => {
     });
 
     pixelEventBus.on(({ x, y }) => {
-        if (size.value == null || virginmap.value == null || loadState.value !== 'success') {
+        if (!size.value || virginmap.value == null || loadState.value !== 'success') {
             return;
         }
 
@@ -61,7 +61,7 @@ export const useVirginmapStore = defineStore('canvas-virginmap', () => {
     }
 
     async function loadVirginmap(): Promise<void> {
-        if (size.value == null || loadState.value === 'loading' || loadState.value === 'success') {
+        if (!size.value || loadState.value === 'loading' || loadState.value === 'success') {
             return;
         }
 
@@ -73,7 +73,7 @@ export const useVirginmapStore = defineStore('canvas-virginmap', () => {
         });
         const virginmapBuffer = await fetchVirginmapData();
         pixelListenerStop();
-        if (virginmapBuffer == null) {
+        if (!virginmapBuffer) {
             loadState.value = 'error';
             return;
         }

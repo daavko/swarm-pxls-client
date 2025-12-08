@@ -1,4 +1,3 @@
-import { PXLS_SOCKET_ORIGIN } from '@/core/pxls-api/const.ts';
 import { SocketClientMessage } from '@/core/pxls-socket/schemas/message-schemas.ts';
 import {
     type EventBusKey,
@@ -38,7 +37,7 @@ const connectedEventBus = usePxlsSocketConnectedEventBus();
 const disconnectedEventBus = usePxlsSocketDisconnectedEventBus();
 
 export function usePxlsSocket(): UseWebSocketReturn<unknown> {
-    canvasSocket ??= useWebSocket(`${PXLS_SOCKET_ORIGIN}/ws`, {
+    canvasSocket ??= useWebSocket(new URL(`${__PXLS_SOCKET_BASE_URL__}/ws`, window.location.origin), {
         immediate: false,
         onMessage: (_, event) => {
             try {

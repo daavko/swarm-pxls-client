@@ -4,21 +4,22 @@
 
 <script setup lang="ts">
 import { useCanvasRenderer } from '@/core/canvas-renderer/canvas-renderer.store.ts';
+import { useCanvasViewportStore } from '@/core/canvas-renderer/canvas-viewport.store.ts';
 import { useCanvasAutosize } from '@/core/canvas-renderer/use-canvas-autosize.ts';
-import { syncRef, useRafFn } from '@vueuse/core';
-import { onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue';
+import { useRafFn } from '@vueuse/core';
 import { storeToRefs } from 'pinia';
+import { onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue';
+import { useCanvasPanner } from '@/core/canvas-renderer/use-canvas-panner.ts';
 
 const canvasRef = useTemplateRef<HTMLCanvasElement>('canvas');
 
-const size = useCanvasAutosize(canvasRef);
 const canvasRenderer = useCanvasRenderer();
-const { viewportWidth, viewportHeight } = storeToRefs(canvasRenderer);
+const { viewportSize } = storeToRefs(useCanvasViewportStore());
+
+const size = useCanvasAutosize(canvasRef);
+const panner = useCanvasPanner(canvasRef);
 
 const glError = ref<string | null>(null);
-
-syncRef(size, viewportWidth, { direction: 'ltr', transform: { ltr: (v) => v.width }, flush: 'sync' });
-syncRef(size, viewportHeight, { direction: 'ltr', transform: { ltr: (v) => v.height }, flush: 'sync' });
 
 onMounted(() => {
     const canvas = canvasRef.value;
@@ -26,6 +27,16 @@ onMounted(() => {
         glError.value = 'Canvas element not found';
         return;
     }
+
+    watch(
+        size,
+        ({ width, height }) => {
+            canvas.width = width;
+            canvas.height = height;
+            viewportSize.value = { width, height };
+        },
+        { immediate: true, flush: 'sync' },
+    );
 
     const gl = canvas.getContext('webgl2', {
         antialias: false,
@@ -43,10 +54,7 @@ onMounted(() => {
     canvasRenderer.renderContextCreated(gl);
 
     useRafFn(() => {
-        const { width, height } = size.value;
-        canvas.width = width;
-        canvas.height = height;
-        canvasRenderer.render(width, height);
+        canvasRenderer.render();
     });
 });
 
@@ -60,5 +68,6 @@ canvas {
     width: 100%;
     height: 100%;
     display: block;
+    touch-action: none;
 }
 </style>

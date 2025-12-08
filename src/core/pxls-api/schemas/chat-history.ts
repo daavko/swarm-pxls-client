@@ -22,7 +22,7 @@ const StrippedFaction = v.object({
 });
 export type StrippedFaction = v.InferOutput<typeof StrippedFaction>;
 
-const ChatMessage = v.object({
+const RawChatMessage = v.object({
     id: Identifier,
     author: v.string(),
     date: SecondsDate,
@@ -36,6 +36,6 @@ const ChatMessage = v.object({
     authorWasShadowBanned: v.optional(v.boolean()),
     strippedFaction: v.optional(StrippedFaction),
 });
-export type ChatMessage = v.InferOutput<typeof ChatMessage>;
+export type RawChatMessage = v.InferOutput<typeof RawChatMessage>;
 
-export const ChatHistoryResponse = v.array(ChatMessage);
+export const ChatHistoryResponse = v.array(RawChatMessage);

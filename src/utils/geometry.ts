@@ -20,3 +20,17 @@ export function pointDelta(a: Point, b: Point): Point {
 export function pointsDistance(p1: Point, p2: Point): number {
     return Math.hypot(p2.x - p1.x, p2.y - p1.y);
 }
+
+export function sizeCenter(size: Size): Point {
+    return {
+        x: size.width / 2,
+        y: size.height / 2,
+    };
+}
+
+export function pointToDeviceCoords(point: Point): Point {
+    return {
+        x: point.x * window.devicePixelRatio,
+        y: point.y * window.devicePixelRatio,
+    };
+}

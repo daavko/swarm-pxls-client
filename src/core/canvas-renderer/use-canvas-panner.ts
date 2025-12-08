@@ -1,7 +1,7 @@
 import { useCanvasViewportStore } from '@/core/canvas-renderer/canvas-viewport.store.ts';
 import { useBoardResetEventBus } from '@/core/canvas/event-buses.ts';
 import { eventIsInappropriate } from '@/utils/event.ts';
-import { type Point, pointDelta, pointsDistance } from '@/utils/geometry.ts';
+import { type Point, pointDelta, pointsDistance, pointToDeviceCoords, sizeCenter } from '@/utils/geometry.ts';
 import { useEventListener } from '@vueuse/core';
 import { storeToRefs } from 'pinia';
 import { readonly, type Ref, ref, type ShallowRef, shallowRef, type TemplateRef } from 'vue';
@@ -84,7 +84,7 @@ interface UseCanvasPannerReturn {
 export function useCanvasPanner(canvas: TemplateRef<HTMLCanvasElement>): UseCanvasPannerReturn {
     const boardResetEventBus = useBoardResetEventBus();
     const canvasViewportStore = useCanvasViewportStore();
-    const { pan, scale } = storeToRefs(useCanvasViewportStore());
+    const { pan, scale, canScaleDown, canScaleUp } = storeToRefs(useCanvasViewportStore());
 
     const pointerState = shallowRef<PanMode>({ mode: 'none' });
     const interactionLocked = ref(false);
@@ -93,10 +93,7 @@ export function useCanvasPanner(canvas: TemplateRef<HTMLCanvasElement>): UseCanv
         canvas,
         'pointerdown',
         (event) => {
-            const viewportCoords = {
-                x: event.offsetX * window.devicePixelRatio,
-                y: event.offsetY * window.devicePixelRatio,
-            };
+            const viewportCoords = pointToDeviceCoords({ x: event.offsetX, y: event.offsetY });
             canvasViewportStore.updateMouseViewportCoords(viewportCoords);
 
             if (interactionLocked.value || eventIsInappropriate(event, true)) {
@@ -129,10 +126,7 @@ export function useCanvasPanner(canvas: TemplateRef<HTMLCanvasElement>): UseCanv
         canvas,
         'pointermove',
         (event) => {
-            const viewportCoords = {
-                x: event.offsetX * window.devicePixelRatio,
-                y: event.offsetY * window.devicePixelRatio,
-            };
+            const viewportCoords = pointToDeviceCoords({ x: event.offsetX, y: event.offsetY });
             canvasViewportStore.updateMouseViewportCoords(viewportCoords);
 
             if (interactionLocked.value || eventIsInappropriate(event, false)) {
@@ -172,10 +166,7 @@ export function useCanvasPanner(canvas: TemplateRef<HTMLCanvasElement>): UseCanv
         canvas,
         'pointerup',
         (event) => {
-            const viewportCoords = {
-                x: event.offsetX * window.devicePixelRatio,
-                y: event.offsetY * window.devicePixelRatio,
-            };
+            const viewportCoords = pointToDeviceCoords({ x: event.offsetX, y: event.offsetY });
             canvasViewportStore.updateMouseViewportCoords(viewportCoords);
             removePointer(event);
         },
@@ -201,14 +192,11 @@ export function useCanvasPanner(canvas: TemplateRef<HTMLCanvasElement>): UseCanv
                 return;
             }
 
-            if (scale.value == null) {
+            if (scale.value == null || !canvasViewportStore.viewportSize) {
                 return;
             }
 
-            const viewportCoords = {
-                x: event.offsetX * window.devicePixelRatio,
-                y: event.offsetY * window.devicePixelRatio,
-            };
+            const viewportCoords = pointToDeviceCoords({ x: event.offsetX, y: event.offsetY });
             canvasViewportStore.updateMouseViewportCoords(viewportCoords);
 
             let scrollDelta: number;
@@ -226,13 +214,17 @@ export function useCanvasPanner(canvas: TemplateRef<HTMLCanvasElement>): UseCanv
                     scrollDelta = -event.deltaY;
                     break;
             }
-            console.log('wheel scroll', scrollDelta, event.deltaMode);
 
             // todo: maybe change this to a different zoom algorithm
             // potential improvements;
             // - instead of trying to force the zoom levels to conform to integers, allow smooth zooming but snap to integer levels when the zooming stops
             const oldScale = scale.value;
-            let newScale = scale.value * Math.exp(scrollDelta * 0.01);
+            let newScale = scale.value * Math.exp(scrollDelta * 0.005);
+
+            if ((newScale < oldScale && !canScaleDown.value) || (newScale > oldScale && !canScaleUp.value)) {
+                return;
+            }
+
             // todo: fix this
             // if (newScale > scale.value) {
             //     if (scale.value >= 1) {
@@ -245,31 +237,17 @@ export function useCanvasPanner(canvas: TemplateRef<HTMLCanvasElement>): UseCanv
             //         newScale = Math.floor(newScale);
             //     }
             // }
-            const beforeZoomBoardCoords = canvasViewportStore.viewportCoordsToBoardCoords(
-                viewportCoords,
-                false,
-                false,
-                oldScale,
-            );
-            if (!beforeZoomBoardCoords) {
-                return;
-            }
-            const afterZoomViewportCoords = canvasViewportStore.boardCoordsToViewportCoords(
-                beforeZoomBoardCoords,
-                newScale,
-            );
-            if (!afterZoomViewportCoords) {
-                return;
-            }
-            const panDelta = pointDelta(afterZoomViewportCoords, viewportCoords);
-            if (pan.value) {
-                // todo: fix this
-                // pan.value = {
-                //     x: pan.value.x - panDelta.x / newScale,
-                //     y: pan.value.y - panDelta.y / newScale,
-                // };
-            }
+
             scale.value = newScale;
+
+            const viewportCenter = sizeCenter(canvasViewportStore.viewportSize);
+            const panDelta = pointDelta(viewportCoords, viewportCenter);
+            if (pan.value) {
+                pan.value = {
+                    x: pan.value.x - panDelta.x / oldScale + panDelta.x / newScale,
+                    y: pan.value.y - panDelta.y / oldScale + panDelta.y / newScale,
+                };
+            }
         },
         { passive: true },
     );

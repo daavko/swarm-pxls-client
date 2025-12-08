@@ -38,6 +38,9 @@ import { computed, ref, watch } from 'vue';
 //     return x >= 0 && x < board.width && y >= 0 && y < board.height;
 // }
 
+const MIN_SCALE = 0.5;
+const MAX_SCALE = 100;
+
 export const useCanvasViewportStore = defineStore('canvas-viewport', () => {
     const { size: canvasSize } = storeToRefs(useCanvasStore());
     const canvasPanScaleStorage = useCanvasPanScaleStorage();
@@ -45,7 +48,13 @@ export const useCanvasViewportStore = defineStore('canvas-viewport', () => {
     const boardResetEventBus = useBoardResetEventBus();
 
     const pan = ref<Point | null>(canvasPanScaleStorage.value?.pan ?? null);
-    const scale = useNumericRefWithBounds(canvasPanScaleStorage.value?.scale ?? null, 0.5, 100);
+    const scale = useNumericRefWithBounds(canvasPanScaleStorage.value?.scale ?? null, MIN_SCALE, MAX_SCALE);
+    const canScaleDown = computed((): boolean => {
+        return scale.value != null && scale.value > MIN_SCALE;
+    });
+    const canScaleUp = computed((): boolean => {
+        return scale.value != null && scale.value < MAX_SCALE;
+    });
 
     const viewportSize = ref<Size | null>(null);
     const viewportOffset = computed((): Point | null => {
@@ -147,21 +156,6 @@ export const useCanvasViewportStore = defineStore('canvas-viewport', () => {
         }
     }
 
-    function boardCoordsToViewportCoords(boardCoords: Point, usedScale?: number): Point | null {
-        const calculationScale = usedScale ?? scale.value;
-
-        if (!viewportOffset.value || calculationScale == null) {
-            return null;
-        }
-
-        // todo: fix this, it's broken
-        const { x: offsetX, y: offsetY } = viewportOffset.value;
-        const viewportX = (boardCoords.x + offsetX) * calculationScale;
-        const viewportY = (boardCoords.y + offsetY) * calculationScale;
-
-        return { x: viewportX, y: viewportY };
-    }
-
     function updateMouseViewportCoords(viewportCoords: Point): void {
         if (mouseViewportCoords.value) {
             mouseViewportCoords.value.x = viewportCoords.x;
@@ -177,12 +171,13 @@ export const useCanvasViewportStore = defineStore('canvas-viewport', () => {
     return {
         pan,
         scale,
+        canScaleDown,
+        canScaleUp,
         viewportSize,
         viewportOffset,
         mouseViewportCoords,
         mouseBoardCoords,
         viewportCoordsToBoardCoords,
-        boardCoordsToViewportCoords,
         updateMouseViewportCoords,
     };
 });

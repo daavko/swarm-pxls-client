@@ -113,14 +113,21 @@ export const useCanvasViewportStore = defineStore('canvas-viewport', () => {
         canvasPanScaleStorage.value = null;
     });
 
-    function viewportCoordsToBoardCoords(viewportCoords: Point, clampToBoard: boolean, floor: boolean): Point | null {
-        if (!viewportOffset.value || scale.value == null) {
+    function viewportCoordsToBoardCoords(
+        viewportCoords: Point,
+        clampToBoard: boolean,
+        floor: boolean,
+        usedScale?: number,
+    ): Point | null {
+        const calculationScale = usedScale ?? scale.value;
+
+        if (!viewportOffset.value || calculationScale == null) {
             return null;
         }
 
         const { x: offsetX, y: offsetY } = viewportOffset.value;
-        let mouseX = (viewportCoords.x - offsetX) / scale.value;
-        let mouseY = (viewportCoords.y - offsetY) / scale.value;
+        let mouseX = (viewportCoords.x - offsetX) / calculationScale;
+        let mouseY = (viewportCoords.y - offsetY) / calculationScale;
 
         if (floor) {
             mouseX = Math.floor(mouseX);
@@ -138,6 +145,21 @@ export const useCanvasViewportStore = defineStore('canvas-viewport', () => {
         } else {
             return { x: mouseX, y: mouseY };
         }
+    }
+
+    function boardCoordsToViewportCoords(boardCoords: Point, usedScale?: number): Point | null {
+        const calculationScale = usedScale ?? scale.value;
+
+        if (!viewportOffset.value || calculationScale == null) {
+            return null;
+        }
+
+        // todo: fix this, it's broken
+        const { x: offsetX, y: offsetY } = viewportOffset.value;
+        const viewportX = (boardCoords.x + offsetX) * calculationScale;
+        const viewportY = (boardCoords.y + offsetY) * calculationScale;
+
+        return { x: viewportX, y: viewportY };
     }
 
     function updateMouseViewportCoords(viewportCoords: Point): void {
@@ -160,6 +182,7 @@ export const useCanvasViewportStore = defineStore('canvas-viewport', () => {
         mouseViewportCoords,
         mouseBoardCoords,
         viewportCoordsToBoardCoords,
+        boardCoordsToViewportCoords,
         updateMouseViewportCoords,
     };
 });

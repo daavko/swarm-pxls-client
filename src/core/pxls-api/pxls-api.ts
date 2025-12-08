@@ -4,8 +4,8 @@ import { InfoResponse } from '@/core/pxls-api/schemas/info.ts';
 import { UsersResponse } from '@/core/pxls-api/schemas/users.ts';
 import * as v from 'valibot';
 
-const TIMEOUT_MS = 5000;
-const TIMEOUT_MS_LONG = 10000;
+const TIMEOUT_MS = 10000;
+const TIMEOUT_MS_LONG = 20000;
 
 function timeoutSignal(ms?: number): AbortSignal {
     return AbortSignal.timeout(ms ?? TIMEOUT_MS);

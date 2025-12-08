@@ -1,13 +1,14 @@
 import { useCanvasViewportStore } from '@/core/canvas-renderer/canvas-viewport.store.ts';
 import { useBoardResetEventBus } from '@/core/canvas/event-buses.ts';
+import { eventIsInappropriate } from '@/utils/event.ts';
 import { type Point, pointDelta, pointsDistance } from '@/utils/geometry.ts';
 import { useEventListener } from '@vueuse/core';
 import { storeToRefs } from 'pinia';
 import { readonly, type Ref, ref, type ShallowRef, shallowRef, type TemplateRef } from 'vue';
-import { eventIsInappropriate } from '@/utils/event.ts';
 
 const MOVE_THRESHOLD_MOUSE = 5;
 const MOVE_THRESHOLD_TOUCH = 10 * window.devicePixelRatio;
+const PX_PER_WHEEL_DELTA = 20;
 
 interface PointerCoordinates {
     boardCoords: Point;
@@ -200,19 +201,75 @@ export function useCanvasPanner(canvas: TemplateRef<HTMLCanvasElement>): UseCanv
                 return;
             }
 
+            if (scale.value == null) {
+                return;
+            }
+
             const viewportCoords = {
                 x: event.offsetX * window.devicePixelRatio,
                 y: event.offsetY * window.devicePixelRatio,
             };
             canvasViewportStore.updateMouseViewportCoords(viewportCoords);
 
-            let delta: number;
-            console.log('wheel scroll', scroll, event.deltaMode);
+            let scrollDelta: number;
             switch (event.deltaMode) {
                 case WheelEvent.DOM_DELTA_PIXEL:
+                    scrollDelta = -event.deltaY;
+                    break;
                 case WheelEvent.DOM_DELTA_LINE:
+                    scrollDelta = -event.deltaY * PX_PER_WHEEL_DELTA;
+                    break;
                 case WheelEvent.DOM_DELTA_PAGE:
+                    scrollDelta = -event.deltaY * PX_PER_WHEEL_DELTA;
+                    break;
+                default:
+                    scrollDelta = -event.deltaY;
+                    break;
             }
+            console.log('wheel scroll', scrollDelta, event.deltaMode);
+
+            // todo: maybe change this to a different zoom algorithm
+            // potential improvements;
+            // - instead of trying to force the zoom levels to conform to integers, allow smooth zooming but snap to integer levels when the zooming stops
+            const oldScale = scale.value;
+            let newScale = scale.value * Math.exp(scrollDelta * 0.01);
+            // todo: fix this
+            // if (newScale > scale.value) {
+            //     if (scale.value >= 1) {
+            //         newScale = Math.ceil(newScale);
+            //     } else if (newScale > 1) {
+            //         newScale = 1;
+            //     }
+            // } else {
+            //     if (newScale >= 1) {
+            //         newScale = Math.floor(newScale);
+            //     }
+            // }
+            const beforeZoomBoardCoords = canvasViewportStore.viewportCoordsToBoardCoords(
+                viewportCoords,
+                false,
+                false,
+                oldScale,
+            );
+            if (!beforeZoomBoardCoords) {
+                return;
+            }
+            const afterZoomViewportCoords = canvasViewportStore.boardCoordsToViewportCoords(
+                beforeZoomBoardCoords,
+                newScale,
+            );
+            if (!afterZoomViewportCoords) {
+                return;
+            }
+            const panDelta = pointDelta(afterZoomViewportCoords, viewportCoords);
+            if (pan.value) {
+                // todo: fix this
+                // pan.value = {
+                //     x: pan.value.x - panDelta.x / newScale,
+                //     y: pan.value.y - panDelta.y / newScale,
+                // };
+            }
+            scale.value = newScale;
         },
         { passive: true },
     );

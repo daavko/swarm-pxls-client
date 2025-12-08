@@ -8,12 +8,12 @@
             <p v-if="userInfo?.banned" class="ui-ban-alert">You are banned. Ban reason: {{ userInfo.banReason }}</p>
             <p v-if="state !== 'running'" class="ui-connection-alert">
                 <template v-if="state === 'beforeFirstConnect'">Not yet connected</template>
-                <template v-if="state === 'fetchingInfo'">Fetching info...</template>
-                <template v-if="state === 'fetchInfoError'">Fetch info error, retrying soon...</template>
+                <template v-if="state === 'fetchingInfo'">Loading canvas info...</template>
+                <template v-if="state === 'fetchInfoError'">Failed to load canvas info, retrying soon...</template>
                 <template v-if="state === 'connectingToSocket'">Connecting to socket...</template>
                 <template v-if="state === 'socketConnectionError'">Socket connection error, retrying soon...</template>
-                <template v-if="state === 'fetchingBoardData'">Fetching board data...</template>
-                <template v-if="state === 'boardDataFetchError'">Board data fetch error, retrying soon...</template>
+                <template v-if="state === 'fetchingBoardData'">Loading canvas data...</template>
+                <template v-if="state === 'boardDataFetchError'">Failed to load canvas data, retrying soon...</template>
                 <template v-if="state === 'reconnecting'">Reconnecting...</template>
             </p>
         </div>

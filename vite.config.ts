@@ -21,6 +21,10 @@ export default defineConfig(({ command }) => {
                     target: 'https://pxls-proxy.shuni.moe',
                     changeOrigin: true,
                     rewrite: (path) => path.replace(/^\/pxls-api/, ''),
+                    cookieDomainRewrite: {
+                        '.pxls.space': 'localhost',
+                        'pxls.space': 'localhost',
+                    },
                 },
                 '/pxls-ws': {
                     target: 'https://pxls-proxy.shuni.moe',
@@ -28,6 +32,10 @@ export default defineConfig(({ command }) => {
                     changeOrigin: true,
                     rewriteWsOrigin: true,
                     rewrite: (path) => path.replace(/^\/pxls-ws/, ''),
+                    cookieDomainRewrite: {
+                        '.pxls.space': 'localhost',
+                        'pxls.space': 'localhost',
+                    },
                 },
             },
         },

@@ -6,13 +6,18 @@
                 <button v-if="selectedColor === null" class="select-color" @click="toggleCollapsed">
                     Select color
                 </button>
-                <button
-                    v-else
-                    class="palette-item palette-color palette-color--standalone"
-                    :style="`--color: ${selectedColor.hex}`"
-                    @click="toggleCollapsed">
-                    <span class="palette-color__index">{{ selectedColor.index }}</span>
-                </button>
+                <div class="palette-selected-buttons" v-else>
+                    <MdiIconButton
+                        :iconPath="mdiCloseThick"
+                        class="palette-item palette-clear palette-clear--standalone"
+                        @click="selectColor(null)"></MdiIconButton>
+                    <button
+                        class="palette-item palette-color palette-color--standalone"
+                        :style="`--color: ${selectedColor.hex}`"
+                        @click="toggleCollapsed">
+                        <span class="palette-color__index">{{ selectedColor.index }}</span>
+                    </button>
+                </div>
             </template>
             <template v-else>
                 <MdiIconButton
@@ -82,6 +87,13 @@ function selectColor(index: number | null): void {
     color: white;
 }
 
+.palette-selected-buttons {
+    display: flex;
+    align-items: end;
+    gap: 4px;
+    padding: 8px;
+}
+
 .palette-items {
     display: grid;
     grid-template-columns: minmax(0, auto) repeat(20, minmax(0, auto));
@@ -108,6 +120,11 @@ function selectColor(index: number | null): void {
 
 .palette-clear {
     color: white;
+
+    &.palette-clear--standalone {
+        width: 40px;
+        height: 40px;
+    }
 }
 
 .palette-color {
@@ -122,7 +139,7 @@ function selectColor(index: number | null): void {
     }
 
     &.palette-color--standalone {
-        margin: 16px 8px 8px;
+        margin-top: 8px;
         width: 40px;
         height: 40px;
 

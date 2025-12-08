@@ -1,4 +1,4 @@
-import { Identifier, NonNegativeInteger, SecondsDate } from '@/utils/schema.ts';
+import { Identifier, Integer, NonNegativeInteger, SecondsDate } from '@/utils/schema.ts';
 import * as v from 'valibot';
 
 export const ChatBadge = v.object({
@@ -27,15 +27,16 @@ const RawChatMessage = v.object({
     author: v.string(),
     date: SecondsDate,
     message_raw: v.string(),
-    replyingToId: Identifier,
+    replyingToId: v.optional(NonNegativeInteger),
     replyShouldMention: v.optional(v.boolean()),
     purge: v.optional(ChatMessagePurge),
     badges: v.array(ChatBadge),
-    authorNameClass: v.optional(v.string()),
-    authorNameColor: NonNegativeInteger,
+    authorNameClass: v.optional(v.array(v.string())),
+    authorNameColor: Integer,
     authorWasShadowBanned: v.optional(v.boolean()),
     strippedFaction: v.optional(StrippedFaction),
 });
 export type RawChatMessage = v.InferOutput<typeof RawChatMessage>;
 
 export const ChatHistoryResponse = v.array(RawChatMessage);
+export type ChatHistoryResponse = v.InferOutput<typeof ChatHistoryResponse>;

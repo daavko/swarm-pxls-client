@@ -17,15 +17,20 @@
                 <template v-if="state === 'reconnecting'">Reconnecting...</template>
             </p>
         </div>
-        <div class="ui-inner ui-inner-top-left ui-inner--container">
-            <CanvasUiButton :iconPath="mdiInformationOutline"></CanvasUiButton>
-            <CanvasUiButton :iconPath="mdiHelpCircleOutline"></CanvasUiButton>
-            <CanvasUiButton :iconPath="mdiBellOutline"></CanvasUiButton>
+        <div class="ui-inner ui-inner-top-left">
+            <div class="ui-inner--container">
+                <CanvasUiButton :iconPath="mdiChatOutline"></CanvasUiButton>
+                <CanvasUiButton :iconPath="mdiBellOutline"></CanvasUiButton>
+            </div>
+            <div class="ui-inner--container">
+                <ChatBubble></ChatBubble>
+            </div>
         </div>
         <div class="ui-inner ui-inner-top-right ui-inner--container">
             <CanvasUiButton :iconPath="mdiLockOpenOutline"></CanvasUiButton>
+            <CanvasUiButton :iconPath="mdiInformationOutline"></CanvasUiButton>
+            <CanvasUiButton :iconPath="mdiHelpCircleOutline"></CanvasUiButton>
             <CanvasUiButton :iconPath="mdiCog"></CanvasUiButton>
-            <CanvasUiButton :iconPath="mdiChatOutline"></CanvasUiButton>
         </div>
         <div class="ui-inner ui-inner-bottom-left ui-inner--container">
             <CanvasInfoBubble></CanvasInfoBubble>
@@ -59,6 +64,7 @@ import CanvasInfoBubble from '@/core/canvas/CanvasInfoBubble.vue';
 import CanvasUiButton from '@/core/canvas/CanvasUiButton.vue';
 import CursorInfoAttachment from '@/core/canvas/CursorInfoAttachment.vue';
 import PaletteBar from '@/core/canvas/PaletteBar.vue';
+import ChatBubble from '@/core/chat/ChatBubble.vue';
 import { useDialog } from '@/core/dialog/dialog.store.ts';
 import AuthDialog from '@/core/session/AuthDialog.vue';
 import AuthFinishDialog from '@/core/session/AuthFinishDialog.vue';
@@ -168,6 +174,8 @@ function openAuthDialog(): void {
 }
 
 .ui-inner {
+    padding: 8px;
+
     &.ui-inner-top-alert {
         grid-area: top-alert;
         user-select: none;
@@ -205,6 +213,9 @@ function openAuthDialog(): void {
     &.ui-inner-top-left {
         grid-area: top-left;
         place-self: start start;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
     }
 
     &.ui-inner-top-right {
@@ -222,15 +233,14 @@ function openAuthDialog(): void {
         place-self: end end;
     }
 
-    &.ui-inner--container {
-        display: flex;
-        gap: 8px;
-        padding: 8px;
-    }
-
-    > * {
+    & > * {
         pointer-events: auto;
     }
+}
+
+.ui-inner--container {
+    display: flex;
+    gap: 8px;
 }
 
 .ui-ban-alert {

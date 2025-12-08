@@ -8,7 +8,8 @@ import { readonly, type Ref, ref, type ShallowRef, shallowRef, type TemplateRef 
 
 const MOVE_THRESHOLD_MOUSE = 5;
 const MOVE_THRESHOLD_TOUCH = 10 * window.devicePixelRatio;
-const PX_PER_WHEEL_DELTA = 20;
+const WHEEL_LINE_SIZE = 20;
+const WHEEL_PAGE_SIZE = 400;
 
 interface PointerCoordinates {
     boardCoords: Point;
@@ -88,6 +89,7 @@ export function useCanvasPanner(canvas: TemplateRef<HTMLCanvasElement>): UseCanv
 
     const pointerState = shallowRef<PanMode>({ mode: 'none' });
     const interactionLocked = ref(false);
+    const wheelDeltaBucket = ref(0);
 
     useEventListener(
         canvas,
@@ -205,19 +207,16 @@ export function useCanvasPanner(canvas: TemplateRef<HTMLCanvasElement>): UseCanv
                     scrollDelta = -event.deltaY;
                     break;
                 case WheelEvent.DOM_DELTA_LINE:
-                    scrollDelta = -event.deltaY * PX_PER_WHEEL_DELTA;
+                    scrollDelta = -event.deltaY * WHEEL_LINE_SIZE;
                     break;
                 case WheelEvent.DOM_DELTA_PAGE:
-                    scrollDelta = -event.deltaY * PX_PER_WHEEL_DELTA;
+                    scrollDelta = -event.deltaY * WHEEL_PAGE_SIZE;
                     break;
                 default:
                     scrollDelta = -event.deltaY;
                     break;
             }
 
-            // todo: maybe change this to a different zoom algorithm
-            // potential improvements;
-            // - instead of trying to force the zoom levels to conform to integers, allow smooth zooming but snap to integer levels when the zooming stops
             const oldScale = scale.value;
             let newScale = scale.value * Math.exp(scrollDelta * 0.005);
 
@@ -225,7 +224,7 @@ export function useCanvasPanner(canvas: TemplateRef<HTMLCanvasElement>): UseCanv
                 return;
             }
 
-            // todo: fix this
+            // todo: enable this only when a setting is enabled (requires actually finishing the settings UI)
             // if (newScale > scale.value) {
             //     if (scale.value >= 1) {
             //         newScale = Math.ceil(newScale);

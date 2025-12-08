@@ -1,5 +1,6 @@
 import { apiFetch, type ApiResponse, binaryApiFetch } from '@/core/pxls-api/api-fetch.ts';
 import { AuthResponse, StartAuthResponse } from '@/core/pxls-api/schemas/auth.ts';
+import { ChatHistoryResponse } from '@/core/pxls-api/schemas/chat-history.ts';
 import { InfoResponse } from '@/core/pxls-api/schemas/info.ts';
 import { UsersResponse } from '@/core/pxls-api/schemas/users.ts';
 import * as v from 'valibot';
@@ -60,7 +61,9 @@ export const PxlsApi = {
     async users(): Promise<ApiResponse<UsersResponse>> {
         return apiFetch('/users', UsersResponse, { signal: timeoutSignal() });
     },
-    // async chatHistory(): Promise<void> {},
+    async chatHistory(): Promise<ApiResponse<ChatHistoryResponse>> {
+        return apiFetch('/chat/history', ChatHistoryResponse, { signal: timeoutSignal() });
+    },
     // async setChatColor(): Promise<void> {},
     // async setDiscordName(): Promise<void> {},
     // async fetchProfileData(): Promise<void> {},

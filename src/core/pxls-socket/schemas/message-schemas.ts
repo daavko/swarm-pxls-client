@@ -47,8 +47,8 @@ const ChatMessageMessage = v.object({
         replyingToId: v.optional(NonNegativeInteger),
         replyShouldMention: v.optional(v.boolean()),
         badges: v.array(ChatBadge),
-        authorNameClass: v.optional(v.string()),
-        authorNameColor: NonNegativeInteger,
+        authorNameClass: v.optional(v.array(v.string())),
+        authorNameColor: Integer,
     }),
 });
 export type ChatMessageMessage = v.InferOutput<typeof ChatMessageMessage>;

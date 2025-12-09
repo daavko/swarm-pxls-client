@@ -17,7 +17,7 @@ export const useChatStore = defineStore('chat', () => {
 
     socketMessageEventBus.on((message) => {
         if (message.type === 'chat_message') {
-            const { type, message: rawMessage } = message;
+            const { message: rawMessage } = message;
             const chatMessage: ChatMessage = {
                 ...rawMessage,
                 segments: segmentRawChatMessage(rawMessage),
@@ -28,7 +28,7 @@ export const useChatStore = defineStore('chat', () => {
     });
 
     function cleanupMessages(): void {
-        messages.value = messages.value.slice(-100).toSorted((a, b) => a.id - b.id);
+        messages.value = messages.value.sort((a, b) => a.id - b.id).slice(-100);
     }
 
     async function fetchChatHistory(): Promise<ApiSuccessResponse<ChatHistoryResponse> | null> {
@@ -61,8 +61,6 @@ export const useChatStore = defineStore('chat', () => {
             return;
         }
 
-        // todo: only keep last N messages
-        // todo: if there are already some messages (from socket), merge them and sort the entire thing by ID
         messages.value = [
             ...messages.value,
             ...response.data.map((rawMessage) => ({

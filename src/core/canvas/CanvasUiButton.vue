@@ -1,5 +1,5 @@
 <template>
-    <MdiIconButton :iconPath="iconPath"></MdiIconButton>
+    <MdiIconButton circular :iconPath="iconPath"></MdiIconButton>
 </template>
 
 <script setup lang="ts">
@@ -14,10 +14,10 @@ defineProps<{
 button {
     width: 40px;
     height: 40px;
-    background: black;
-    color: white;
-    border-radius: 50%;
-    border: 2px solid #666666;
+    --button-bg-color: black;
+    --button-text-color: white;
+    --button-border-color: #666666;
+    --button-border-thickness: 2px;
 
     &:hover {
         background: #333;

@@ -60,7 +60,7 @@ function backdropClick(dialog: Dialog): void {
 .dialog-backdrop {
     position: absolute;
     inset: 0;
-    background-color: rgba(0, 0, 0, 0.4);
+    background-color: var(--dialog-backdrop-color);
     pointer-events: all;
 }
 </style>

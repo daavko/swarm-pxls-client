@@ -1,19 +1,15 @@
 <template>
-    <button>
-        <MdiIcon :iconPath="$props.iconPath" :size="$props.size" :inline="$props.inline"></MdiIcon>
-    </button>
+    <BlockButton v-bind="$props">
+        <MdiIcon v-bind="$props"></MdiIcon>
+    </BlockButton>
 </template>
 
 <script setup lang="ts">
-import MdiIcon, { type MdiIconProps } from '@/core/common/MdiIcon.vue';
+import BlockButton from '@/core/common/BlockButton.vue';
+import MdiIcon from '@/core/common/MdiIcon.vue';
+import type { BlockButtonProps, MdiIconProps } from '@/core/common/types.ts';
 
-defineProps<MdiIconProps>();
+defineProps<MdiIconProps & BlockButtonProps>();
 </script>
 
-<style scoped>
-button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-</style>
+<style scoped></style>

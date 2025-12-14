@@ -5,11 +5,8 @@
 </template>
 
 <script setup lang="ts">
-export interface MdiIconProps {
-    iconPath: string;
-    size?: number;
-    inline?: boolean;
-}
+import type { MdiIconProps } from '@/core/common/types.ts';
+
 const { iconPath, size = 24, inline = false } = defineProps<MdiIconProps>();
 </script>
 

@@ -24,6 +24,8 @@ export default defineConfig(({ command }) => {
                     cookieDomainRewrite: {
                         '.pxls.space': 'localhost',
                         'pxls.space': 'localhost',
+                        '.pxls-proxy.shuni.moe': 'localhost',
+                        'pxls-proxy.shuni.moe': 'localhost',
                     },
                 },
                 '/pxls-ws': {
@@ -35,6 +37,8 @@ export default defineConfig(({ command }) => {
                     cookieDomainRewrite: {
                         '.pxls.space': 'localhost',
                         'pxls.space': 'localhost',
+                        '.pxls-proxy.shuni.moe': 'localhost',
+                        'pxls-proxy.shuni.moe': 'localhost',
                     },
                 },
             },

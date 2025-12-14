@@ -9,6 +9,12 @@ import { usePxlsSocketMessageEventBus } from '@/core/pxls-socket/use-pxls-socket
 import { defineStore } from 'pinia';
 import { readonly, ref } from 'vue';
 
+const MESSAGE_LIMIT = 100;
+
+function sortAndSliceMessages(messages: ChatMessage[], limit: number): ChatMessage[] {
+    return messages.sort((a, b) => a.id - b.id).slice(-limit);
+}
+
 export const useChatStore = defineStore('chat', () => {
     const messages = ref<ChatMessage[]>([]);
     const loadState = ref<ApiRequestState>('idle');
@@ -22,14 +28,9 @@ export const useChatStore = defineStore('chat', () => {
                 ...rawMessage,
                 segments: segmentRawChatMessage(rawMessage),
             };
-            messages.value.push(chatMessage);
-            cleanupMessages();
+            messages.value = sortAndSliceMessages([...messages.value, chatMessage], MESSAGE_LIMIT);
         }
     });
-
-    function cleanupMessages(): void {
-        messages.value = messages.value.sort((a, b) => a.id - b.id).slice(-100);
-    }
 
     async function fetchChatHistory(): Promise<ApiSuccessResponse<ChatHistoryResponse> | null> {
         let chatHistoryResponse: ApiResponse<ChatHistoryResponse>;
@@ -61,14 +62,16 @@ export const useChatStore = defineStore('chat', () => {
             return;
         }
 
-        messages.value = [
-            ...messages.value,
-            ...response.data.map((rawMessage) => ({
-                ...rawMessage,
-                segments: segmentRawChatMessage(rawMessage),
-            })),
-        ];
-        cleanupMessages();
+        messages.value = sortAndSliceMessages(
+            [
+                ...messages.value,
+                ...response.data.map((rawMessage) => ({
+                    ...rawMessage,
+                    segments: segmentRawChatMessage(rawMessage),
+                })),
+            ],
+            MESSAGE_LIMIT,
+        );
 
         loadState.value = 'success';
     }

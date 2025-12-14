@@ -2,7 +2,7 @@
     <div class="canvas-container">
         <CanvasRenderer></CanvasRenderer>
     </div>
-    <CursorInfoAttachment v-if="loggedIn"></CursorInfoAttachment>
+    <CursorInfoAttachment v-if="loggedIn === true"></CursorInfoAttachment>
     <div class="ui">
         <div class="ui-inner ui-inner-top-alert">
             <p v-if="userInfo?.banned" class="ui-ban-alert">You are banned. Ban reason: {{ userInfo.banReason }}</p>
@@ -19,11 +19,14 @@
         </div>
         <div class="ui-inner ui-inner-top-left">
             <div class="ui-inner--container">
-                <CanvasUiButton :iconPath="mdiChatOutline"></CanvasUiButton>
+                <CanvasUiButton
+                    v-if="loggedIn === true"
+                    :iconPath="mdiChatOutline"
+                    @click="showChat = !showChat"></CanvasUiButton>
                 <CanvasUiButton :iconPath="mdiBellOutline"></CanvasUiButton>
             </div>
             <div class="ui-inner--container">
-                <ChatBubble></ChatBubble>
+                <ChatBubble v-if="showChat"></ChatBubble>
             </div>
         </div>
         <div class="ui-inner ui-inner-top-right ui-inner--container">
@@ -36,10 +39,10 @@
             <CanvasInfoBubble></CanvasInfoBubble>
         </div>
         <div class="ui-inner ui-inner-bottom-right ui-inner--container">
-            <PaletteBar v-if="loggedIn"></PaletteBar>
+            <PaletteBar v-if="loggedIn === true"></PaletteBar>
         </div>
         <div class="ui-inner ui-inner-bottom-alert">
-            <div v-if="info && !loggedIn" class="ui-auth-alert">
+            <div v-if="info && loggedIn === false" class="ui-auth-alert">
                 <p><a @click.prevent="openAuthDialog">Log in / register</a> to place pixels.</p>
                 <p>
                     <small
@@ -70,7 +73,6 @@ import AuthDialog from '@/core/session/AuthDialog.vue';
 import AuthFinishDialog from '@/core/session/AuthFinishDialog.vue';
 import { useSession, useTypeAssistedSessionUserInfo } from '@/core/session/session.store.ts';
 import { useSessionAuthFlowStorage } from '@/core/session/use-session-auth-flow-storage.ts';
-import { useCooldownFormat } from '@/utils/format.ts';
 import { useIntegerQueryParam } from '@/utils/router.ts';
 import {
     mdiBellOutline,
@@ -82,12 +84,12 @@ import {
 } from '@mdi/js';
 import { useTitle } from '@vueuse/core';
 import { storeToRefs } from 'pinia';
-import { computed, onBeforeMount, onMounted } from 'vue';
+import { computed, onBeforeMount, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 const { state, info } = storeToRefs(useCanvasStore());
 const { scheduleImmediateReconnect } = useCanvasStore();
-const { loggedIn, availablePixels, cooldown } = storeToRefs(useSession());
+const { loggedIn, availablePixels, cooldown, formattedCooldown } = storeToRefs(useSession());
 const userInfo = useTypeAssistedSessionUserInfo();
 const { createDialog } = useDialog();
 const authFlowStorage = useSessionAuthFlowStorage();
@@ -95,11 +97,10 @@ const route = useRoute();
 const router = useRouter();
 const { pan, scale } = storeToRefs(useCanvasViewportStore());
 
-const cooldownMilliseconds = computed(() => cooldown.value?.millisecondsLeft);
-const formattedCooldown = useCooldownFormat(cooldownMilliseconds, false);
+const showChat = ref(false);
 const pageTitle = computed(() => {
-    if (info.value && loggedIn.value) {
-        if (cooldownMilliseconds.value != null) {
+    if (info.value && loggedIn.value === true) {
+        if (cooldown.value != null) {
             return `[${formattedCooldown.value}] - Unofficial Pxls Client`;
         } else {
             return `[${availablePixels.value ?? 0}/${info.value.maxStacked}] - Unofficial Pxls Client`;
@@ -246,17 +247,18 @@ function openAuthDialog(): void {
 .ui-ban-alert {
     padding: 8px;
     background: #b00000;
-    color: white;
+    color: var(--text-color-light);
 }
 
 .ui-connection-alert {
     padding: 8px;
     background: #f39b16;
+    color: var(--text-color-dark);
 }
 
 .ui-auth-alert {
     padding: 16px;
-    background: rgba(0, 0, 0, 0.85);
-    color: white;
+    background-color: var(--panel-bg-color);
+    color: var(--panel-text-color);
 }
 </style>

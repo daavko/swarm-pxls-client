@@ -225,19 +225,23 @@ export function useCanvasPanner(canvas: TemplateRef<HTMLCanvasElement>): UseCanv
             }
 
             // todo: enable this only when a setting is enabled (requires actually finishing the settings UI)
-            // if (newScale > scale.value) {
-            //     if (scale.value >= 1) {
-            //         newScale = Math.ceil(newScale);
-            //     } else if (newScale > 1) {
-            //         newScale = 1;
-            //     }
-            // } else {
-            //     if (newScale >= 1) {
-            //         newScale = Math.floor(newScale);
-            //     }
-            // }
+            if (newScale > scale.value) {
+                if (scale.value >= 1) {
+                    newScale = Math.ceil(newScale);
+                } else if (newScale > 1) {
+                    newScale = 1;
+                }
+            } else {
+                if (newScale >= 1) {
+                    newScale = Math.floor(newScale);
+                }
+            }
 
             scale.value = newScale;
+            if (scale.value !== newScale) {
+                // we hit a limit
+                newScale = scale.value;
+            }
 
             const viewportCenter = sizeCenter(canvasViewportStore.viewportSize);
             const panDelta = pointDelta(viewportCoords, viewportCenter);

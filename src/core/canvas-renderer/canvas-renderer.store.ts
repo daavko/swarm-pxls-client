@@ -1,4 +1,5 @@
-import { BoardLayer } from '@/core/canvas-renderer/board.ts';
+import { BoardLayer } from '@/core/canvas-renderer/builtin-layers/board.ts';
+import { ReticleLayer } from '@/core/canvas-renderer/builtin-layers/reticle.ts';
 import { useCanvasViewportStore } from '@/core/canvas-renderer/canvas-viewport.store.ts';
 import { RenderLayer, type RenderLayerOptions } from '@/core/canvas-renderer/render-layer.ts';
 import { useLayerOptionsStorage } from '@/core/canvas-renderer/use-layer-options-storage.ts';
@@ -76,20 +77,24 @@ export const useCanvasRenderer = defineStore('canvas-layers', () => {
         { flush: 'post' },
     );
 
-    watch(layerOptionsStorage, (newVal) => {
-        const currentOptions = layersToOptions(layers.value);
-        if (anyOptionsChanged(newVal, currentOptions)) {
-            for (const option of newVal) {
-                const layerOption = layers.value.find((l) => l.name === option.name);
-                if (layerOption) {
-                    layerOption.enabled = option.enabled;
-                    layerOption.opacity = option.opacity;
-                } else {
-                    layers.value.push(shallowReactive({ ...option }));
+    watch(
+        layerOptionsStorage,
+        (newVal) => {
+            const currentOptions = layersToOptions(layers.value);
+            if (anyOptionsChanged(newVal, currentOptions)) {
+                for (const option of newVal) {
+                    const layerOption = layers.value.find((l) => l.name === option.name);
+                    if (layerOption) {
+                        layerOption.enabled = option.enabled;
+                        layerOption.opacity = option.opacity;
+                    } else {
+                        layers.value.push(shallowReactive({ ...option }));
+                    }
                 }
             }
-        }
-    });
+        },
+        { immediate: true },
+    );
 
     function registerLayer(layer: RenderLayer): void {
         const existingLayer = layers.value.find((l) => l.name === layer.name);
@@ -167,6 +172,7 @@ export const useCanvasRenderer = defineStore('canvas-layers', () => {
     }
 
     registerLayer(new BoardLayer());
+    registerLayer(new ReticleLayer());
 
     return {
         gl: glRef,

@@ -8,12 +8,14 @@
                 </button>
                 <div class="palette-selected-buttons" v-else>
                     <MdiIconButton
-                        :iconPath="mdiCloseThick"
                         class="palette-item palette-clear palette-clear--standalone"
+                        borderless
+                        transparent
+                        :iconPath="mdiCloseThick"
                         @click="selectColor(null)"></MdiIconButton>
                     <button
                         class="palette-item palette-color palette-color--standalone"
-                        :style="`--color: ${selectedColor.hex}`"
+                        :style="{ '--palette-bar_palette-color': selectedColor.hex }"
                         @click="toggleCollapsed">
                         <span class="palette-color__index">{{ selectedColor.index }}</span>
                     </button>
@@ -21,19 +23,24 @@
             </template>
             <template v-else>
                 <MdiIconButton
-                    :iconPath="mdiChevronRight"
                     class="palette-collapse"
+                    borderless
+                    square
+                    transparent
+                    :iconPath="mdiChevronRight"
                     @click="toggleCollapsed"></MdiIconButton>
                 <div class="palette-items">
                     <MdiIconButton
-                        :iconPath="mdiCloseThick"
                         class="palette-item palette-clear"
+                        borderless
+                        transparent
+                        :iconPath="mdiCloseThick"
                         @click="selectColor(null)"></MdiIconButton>
                     <template v-for="paletteItem in info.palette" :key="paletteItem.hex">
                         <button
                             class="palette-item palette-color"
                             :class="{ 'palette-color--selected': selectedColorIndex === paletteItem.index }"
-                            :style="{ '--color': paletteItem.hex }"
+                            :style="{ '--palette-bar_palette-color': paletteItem.hex }"
                             @click="selectColor(paletteItem.index)">
                             <span class="palette-color__index">{{ paletteItem.index }}</span>
                         </button>
@@ -73,18 +80,18 @@ function selectColor(index: number | null): void {
     border-radius: 8px;
     overflow: hidden;
     gap: 8px;
-    background: rgba(0, 0, 0, 0.7);
+    background-color: var(--panel-bg-color);
+    color: var(--panel-text-color);
 }
 
 .palette-loading {
     padding: 16px;
-    color: white;
     align-self: center;
 }
 
 .select-color {
     padding: 16px;
-    color: white;
+    color: var(--panel-text-color);
 }
 
 .palette-selected-buttons {
@@ -105,12 +112,7 @@ function selectColor(index: number | null): void {
 
 .palette-collapse {
     height: 100%;
-    color: white;
     padding-inline: 8px;
-
-    &:hover {
-        background: rgba(255, 255, 255, 0.1);
-    }
 }
 
 .palette-item {
@@ -119,8 +121,6 @@ function selectColor(index: number | null): void {
 }
 
 .palette-clear {
-    color: white;
-
     &.palette-clear--standalone {
         width: 40px;
         height: 40px;
@@ -130,12 +130,17 @@ function selectColor(index: number | null): void {
 .palette-color {
     border: 2px solid black;
     border-radius: 4px;
-    background: var(--color, transparent);
+    background: var(--palette-bar_palette-color, transparent);
     position: relative;
 
+    &:hover:not(.palette-color--selected, .palette-color--standalone) {
+        outline: 2px solid lab(100 0 0 / 0.3);
+        outline-offset: 1px;
+    }
+
     &.palette-color--selected {
-        outline: 3px solid white;
-        outline-offset: 2px;
+        outline: 2px solid white;
+        outline-offset: 1px;
     }
 
     &.palette-color--standalone {
@@ -156,8 +161,8 @@ function selectColor(index: number | null): void {
         left: 50%;
         transform: translateX(-50%) translateY(-50%);
         font-size: 0.75rem;
-        color: white;
-        background: dimgrey;
+        color: var(--panel-text-color);
+        background: #404040;
         border: 1px solid black;
         border-radius: 20px;
         width: 24px;

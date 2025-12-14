@@ -1,3 +1,4 @@
+import { hexToAbgr } from '@/utils/color.ts';
 import { PositiveInteger } from '@/utils/schema.ts';
 import * as v from 'valibot';
 
@@ -47,16 +48,11 @@ export const InfoResponse = v.object({
         v.array(RawPaletteItem),
         v.transform((items): PaletteItem[] => {
             return items.map((item, index) => {
-                const r = parseInt(item.value.slice(0, 2), 16);
-                const g = parseInt(item.value.slice(2, 4), 16);
-                const b = parseInt(item.value.slice(4, 6), 16);
-                const a = 255;
-                const rawRgba = (a << 24) | (b << 16) | (g << 8) | r;
                 return {
                     index,
                     name: item.name,
                     hex: `#${item.value.toLowerCase()}`,
-                    rawRgba,
+                    rawRgba: hexToAbgr(item.value, false),
                 };
             });
         }),

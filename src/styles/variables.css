@@ -1,0 +1,24 @@
+:root {
+    --bg-base-color: #17181a;
+    --text-color-light: #f1f2f5;
+    --text-color-dark: #151414;
+    --text-color: var(--text-color-light);
+
+    --panel-bg-color: rgb(from var(--bg-base-color) r g b / 0.95);
+    --panel-text-color: var(--text-color);
+
+    --dialog-bg-color: lab(from var(--bg-base-color) calc(l - 5) a b);
+    --dialog-text-color: var(--text-color);
+    --dialog-border-color: lab(35 0 0);
+    --dialog-backdrop-color: lab(0 0 0 / 0.4);
+
+    --button-bg-color: #202326;
+    --button-bg-color-hover: lab(from var(--button-bg-color) calc(l + 5) a b);
+    --button-bg-color-active: lab(from var(--button-bg-color) calc(l - 5) a b);
+    --button-bg-color-disabled: lab(from var(--button-bg-color) calc(l + 2.5) a b);
+    --button-text-color: var(--text-color);
+    --button-text-color-disabled: lab(from var(--text-color) calc(l - 40) a b);
+    --button-border-color: #f1f2f5;
+    --button-border-color-disabled: lab(from var(--button-border-color) calc(l - 40) a b);
+    --button-border-thickness: 1px;
+}

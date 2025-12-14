@@ -34,6 +34,7 @@ canvasSocketMessageBus.on((message) => {
 
 <style>
 @import 'ress/ress.css';
+@import './styles/variables.css';
 @import './styles/global.css';
 @import './styles/inter.css';
 @import './styles/text-utils.css';

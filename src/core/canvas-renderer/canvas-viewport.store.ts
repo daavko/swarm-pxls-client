@@ -8,36 +8,6 @@ import { watchThrottled } from '@vueuse/core';
 import { defineStore, storeToRefs } from 'pinia';
 import { computed, ref, watch } from 'vue';
 
-// function screenSpaceCoordsToBoardSpaceUnclamped(screenX: number, screenY: number): Point {
-//     const boardX = (screenX - board.x) / board.scale;
-//     const boardY = (screenY - board.y) / board.scale;
-//     return { x: boardX, y: boardY };
-// }
-//
-// function screenSpaceCoordsToBoardSpace(screenX: number, screenY: number, floored = false): Point {
-//     const { x: boardX, y: boardY } = screenSpaceCoordsToBoardSpaceUnclamped(screenX, screenY);
-//     // const clampedX = Math.max(0, Math.min(boardX, board.width - 1));
-//     // const clampedY = Math.max(0, Math.min(boardY, board.height - 1));
-//     const clampedX = clamp(0, boardX, board.width - 1);
-//     const clampedY = clamp(0, boardY, board.height - 1);
-//     if (floored) {
-//         return { x: Math.floor(clampedX), y: Math.floor(clampedY) };
-//     } else {
-//         return { x: clampedX, y: clampedY };
-//     }
-// }
-//
-// function boardSpaceCoordsToScreenSpace(boardX: number, boardY: number): Point {
-//     const screenX = (boardX - board.panX) / board.scale + board.canvas.width / 2;
-//     const screenY = (boardY - board.panY) / board.scale + board.canvas.height / 2;
-//     return { x: screenX, y: screenY };
-// }
-//
-// function screenSpaceCoordIsOnBoard(screenX: number, screenY: number): boolean {
-//     const { x, y } = screenSpaceCoordsToBoardSpaceUnclamped(screenX, screenY);
-//     return x >= 0 && x < board.width && y >= 0 && y < board.height;
-// }
-
 const MIN_SCALE = 0.5;
 const MAX_SCALE = 100;
 

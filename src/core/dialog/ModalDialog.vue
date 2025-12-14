@@ -74,11 +74,11 @@ const componentContent = computed(() => {
     display: flex;
     flex-direction: column;
 
-    background-color: black;
-    color: white;
-    border: 2px solid white;
+    background: var(--dialog-bg-color);
+    color: var(--dialog-text-color);
+    border: 2px solid var(--dialog-border-color);
     border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2px 10px rgb(0 0 0 / 0.2);
 
     &.dialog--small {
         min-width: min(300px, 90dvw);

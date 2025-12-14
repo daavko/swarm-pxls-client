@@ -49,6 +49,7 @@ export const useCanvasStore = defineStore('canvas', () => {
     const selectedColorStorage = useSelectedColorStorage();
 
     const state = ref<CanvasState>('beforeFirstConnect');
+    const wasEverConnected = ref(false);
     const info = shallowRef<InfoResponse | null>(null);
     const selectedColorIndex = ref<number | null>(null);
     const hoveredPixelPosition = ref<Point | null>(null);
@@ -214,6 +215,7 @@ export const useCanvasStore = defineStore('canvas', () => {
             scheduleReconnect('socketConnectionError');
             return;
         }
+        wasEverConnected.value = true;
 
         const bufferedPixels: PixelMessage[] = [];
         const pixelListenerStop = canvasSocketMessageBus.on((message) => {
@@ -311,6 +313,7 @@ export const useCanvasStore = defineStore('canvas', () => {
 
     return {
         state: readonly(state),
+        wasEverConnected: readonly(wasEverConnected),
         info: readonly(info),
         size: computed((): Size | null => {
             const infoValue = info.value;

@@ -36,7 +36,7 @@ const { x, y } = useMouse({ type: 'page' });
 
 .available-pixels {
     position: absolute;
-    color: white;
+    color: var(--panel-text-color);
     right: 0;
     bottom: 0;
     font-size: 0.875rem;

@@ -4,8 +4,9 @@ import type { UserinfoMessage } from '@/core/pxls-socket/schemas/message-schemas
 import { usePxlsSocketMessageEventBus } from '@/core/pxls-socket/use-pxls-socket.ts';
 import { useSessionAuthFlowStorage } from '@/core/session/use-session-auth-flow-storage.ts';
 import { useRafFn } from '@vueuse/core';
-import { defineStore } from 'pinia';
-import { computed, type ComputedRef, type DeepReadonly, ref } from 'vue';
+import { Duration } from 'luxon';
+import { defineStore, storeToRefs } from 'pinia';
+import { computed, type ComputedRef, type DeepReadonly, readonly, ref } from 'vue';
 
 export type UserInfo = Omit<UserinfoMessage, 'type'>;
 
@@ -19,6 +20,7 @@ export const useSession = defineStore('session', () => {
     const canvasSocketMessageBus = usePxlsSocketMessageEventBus();
     const authFlowStorage = useSessionAuthFlowStorage();
     const { scheduleImmediateReconnect } = useCanvasStore();
+    const { wasEverConnected } = storeToRefs(useCanvasStore());
 
     const cooldownTickerWorker = new Worker(new URL('@/workers/cooldown-ticker.worker.ts', import.meta.url));
     const cooldownTickerRaf = useRafFn(
@@ -133,9 +135,19 @@ export const useSession = defineStore('session', () => {
 
     return {
         userInfo,
-        loggedIn: computed(() => userInfo.value !== null),
-        availablePixels,
-        cooldown,
+        loggedIn: computed((): boolean | null => (wasEverConnected.value ? userInfo.value !== null : null)),
+        availablePixels: readonly(availablePixels),
+        cooldown: readonly(cooldown),
+        formattedCooldown: computed((): string => {
+            const cooldownMs = cooldown.value?.millisecondsLeft;
+            if (cooldownMs == null) {
+                return '';
+            }
+
+            let duration = Duration.fromMillis(cooldownMs).shiftTo('minutes', 'seconds');
+            duration = duration.set({ seconds: Math.ceil(duration.seconds) });
+            return duration.toFormat('mm:ss');
+        }),
         startAuthFlow,
         finishAuthFlow,
         finishSignup,

@@ -19,21 +19,30 @@
         </div>
         <div class="ui-inner ui-inner-top-left">
             <div class="ui-inner--container">
-                <CanvasUiButton
-                    v-if="loggedIn === true"
-                    :iconPath="mdiChatOutline"
-                    @click="showChat = !showChat"></CanvasUiButton>
-                <CanvasUiButton :iconPath="mdiBellOutline"></CanvasUiButton>
+                <CanvasUiButton v-if="loggedIn === true" :iconPath="mdiChatOutline" @click="showChat = !showChat">
+                    <template #tooltip>Chat</template>
+                </CanvasUiButton>
+                <CanvasUiButton :iconPath="mdiBellOutline">
+                    <template #tooltip>Alerts</template>
+                </CanvasUiButton>
             </div>
             <div class="ui-inner--container">
                 <ChatBubble v-if="showChat"></ChatBubble>
             </div>
         </div>
         <div class="ui-inner ui-inner-top-right ui-inner--container">
-            <CanvasUiButton :iconPath="mdiLockOpenOutline"></CanvasUiButton>
-            <CanvasUiButton :iconPath="mdiInformationOutline"></CanvasUiButton>
-            <CanvasUiButton :iconPath="mdiHelpCircleOutline"></CanvasUiButton>
-            <CanvasUiButton :iconPath="mdiCog"></CanvasUiButton>
+            <CanvasUiButton :iconPath="mdiLockOpenOutline">
+                <template #tooltip>Lock canvas view</template>
+            </CanvasUiButton>
+            <CanvasUiButton :iconPath="mdiInformationOutline">
+                <template #tooltip>Info</template>
+            </CanvasUiButton>
+            <CanvasUiButton :iconPath="mdiHelpCircleOutline">
+                <template #tooltip>Frequently asked questions</template>
+            </CanvasUiButton>
+            <CanvasUiButton :iconPath="mdiCog">
+                <template #tooltip>Settings</template>
+            </CanvasUiButton>
         </div>
         <div class="ui-inner ui-inner-bottom-left ui-inner--container">
             <CanvasInfoBubble></CanvasInfoBubble>
@@ -246,14 +255,14 @@ function openAuthDialog(): void {
 
 .ui-ban-alert {
     padding: 8px;
-    background: #b00000;
-    color: var(--text-color-light);
+    background: var(--bg-color-error);
+    color: var(--text-color-error);
 }
 
 .ui-connection-alert {
     padding: 8px;
-    background: #f39b16;
-    color: var(--text-color-dark);
+    background: var(--bg-color-warning);
+    color: var(--text-color-warning);
 }
 
 .ui-auth-alert {

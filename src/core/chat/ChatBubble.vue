@@ -1,18 +1,28 @@
 <template>
     <div class="chat-bubble">
-        <div class="chat-messages" ref="chatMessagesContainer">
-            <template v-for="(message, index) in messages" :key="message.id">
-                <hr v-if="index !== 0" class="chat-message-separator" />
-                <ChatMessageView :chatMessage="message" class="chat-message"></ChatMessageView>
-            </template>
+        <div v-if="loadState === 'loading'" class="chat-loading">
+            <p>Loading chat...</p>
         </div>
-        <div class="chat-input"></div>
+        <template v-else-if="loadState === 'success'">
+            <div class="chat-messages" ref="chatMessagesContainer">
+                <template v-for="(message, index) in messages" :key="message.id">
+                    <hr v-if="index !== 0" class="chat-message-separator" />
+                    <ChatMessageView :chatMessage="message" class="chat-message"></ChatMessageView>
+                </template>
+            </div>
+            <div class="chat-input"></div>
+        </template>
+        <div v-else-if="loadState === 'error'" class="chat-error">
+            <p>There was an error when loading chat.</p>
+            <BlockButton class="chat-reload" @click="chatStore.loadChatHistory">Reload</BlockButton>
+        </div>
     </div>
 </template>
 
 <script setup lang="ts">
 import { useChatStore } from '@/core/chat/chat.store.ts';
 import ChatMessageView from '@/core/chat/ChatMessageView.vue';
+import BlockButton from '@/core/common/BlockButton.vue';
 import { useScroll } from '@vueuse/core';
 import { storeToRefs } from 'pinia';
 import { nextTick, onMounted, useTemplateRef, watch } from 'vue';
@@ -20,7 +30,7 @@ import { nextTick, onMounted, useTemplateRef, watch } from 'vue';
 const chatMessagesContainer = useTemplateRef<HTMLElement>('chatMessagesContainer');
 
 const chatStore = useChatStore();
-const { messages } = storeToRefs(chatStore);
+const { messages, loadState } = storeToRefs(chatStore);
 
 onMounted(() => {
     void chatStore.loadChatHistory();
@@ -64,6 +74,26 @@ onMounted(() => {
     overflow: hidden;
     display: flex;
     flex-direction: column;
+}
+
+.chat-loading {
+    flex-grow: 1;
+    display: grid;
+    place-content: center;
+}
+
+.chat-error {
+    flex-grow: 1;
+    display: grid;
+    place-content: center;
+    gap: 8px;
+    padding: 8px;
+    color: var(--text-color-error-accent);
+
+    .chat-reload {
+        justify-self: center;
+        padding: 4px 8px;
+    }
 }
 
 .chat-messages {

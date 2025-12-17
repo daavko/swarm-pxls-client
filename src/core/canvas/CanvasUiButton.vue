@@ -1,13 +1,18 @@
 <template>
-    <MdiIconButton circular :iconPath="iconPath"></MdiIconButton>
+    <MdiIconButton circular :iconPath="iconPath" ref="button"></MdiIconButton>
+    <TooltipOverlay v-if="$slots['tooltip']" :target="button"><slot name="tooltip"></slot></TooltipOverlay>
 </template>
 
 <script setup lang="ts">
 import MdiIconButton from '@/core/common/MdiIconButton.vue';
+import TooltipOverlay from '@/core/tooltip/TooltipOverlay.vue';
+import { useTemplateRef } from 'vue';
 
 defineProps<{
     iconPath: string;
 }>();
+
+const button = useTemplateRef('button');
 </script>
 
 <style scoped>

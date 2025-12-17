@@ -3,6 +3,11 @@
     --text-color-light: #f1f2f5;
     --text-color-dark: #151414;
     --text-color: var(--text-color-light);
+    --bg-color-error: #a22b2c;
+    --text-color-error: var(--text-color-light);
+    --text-color-error-accent: #ff7f7f;
+    --bg-color-warning: #f39b16;
+    --text-color-warning: var(--text-color-dark);
 
     --panel-bg-color: rgb(from var(--bg-base-color) r g b / 0.95);
     --panel-text-color: var(--text-color);
@@ -11,6 +16,7 @@
     --dialog-text-color: var(--text-color);
     --dialog-border-color: lab(35 0 0);
     --dialog-backdrop-color: lab(0 0 0 / 0.4);
+    --dialog-container-z-index: 100;
 
     --button-bg-color: #202326;
     --button-bg-color-hover: lab(from var(--button-bg-color) calc(l + 5) a b);
@@ -21,4 +27,8 @@
     --button-border-color: #f1f2f5;
     --button-border-color-disabled: lab(from var(--button-border-color) calc(l - 40) a b);
     --button-border-thickness: 1px;
+
+    --tooltip-bg-color: #202326;
+    --tooltip-text-color: var(--text-color);
+    --tooltip-z-index: 200;
 }

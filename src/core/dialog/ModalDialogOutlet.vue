@@ -49,7 +49,7 @@ function backdropClick(dialog: Dialog): void {
     position: fixed;
     inset: 0;
     pointer-events: none;
-    z-index: 1000;
+    z-index: var(--dialog-container-z-index);
 }
 
 .dialog-container {

@@ -94,14 +94,14 @@ h2 {
 
     .registrations-disabled {
         font-size: 0.875rem;
-        color: #ff7f7f;
+        color: var(--text-color-error-accent);
         font-style: italic;
     }
 }
 
 .auth-error {
     grid-column: 1 / -1;
-    color: #ff7f7f;
+    color: var(--text-color-error-accent);
     text-align: center;
 }
 </style>

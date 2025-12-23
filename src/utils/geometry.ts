@@ -1,7 +1,14 @@
+import * as v from 'valibot';
+
 export interface Size {
     width: number;
     height: number;
 }
+
+export const pointStorageSchema = v.object({
+    x: v.number(),
+    y: v.number(),
+});
 
 export interface Point {
     x: number;

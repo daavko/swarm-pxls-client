@@ -5,18 +5,19 @@ import reticleFragmentShaderSource from '@/core/canvas-renderer/shaders/reticle.
 import simpleRectVertexShaderSource from '@/core/canvas-renderer/shaders/simple-rect.vert?raw';
 import { useCanvasStore } from '@/core/canvas/canvas.store.ts';
 import { abgrToVec4 } from '@/utils/color.ts';
+import { useMediaQuery } from '@vueuse/core';
 import { storeToRefs } from 'pinia';
-import { watch, type WatchHandle } from 'vue';
+import { effectScope, type EffectScope, watch } from 'vue';
 
 class ReticleRenderable extends QuadRenderable {
     protected activeProgram: WebGLProgram;
 
-    private readonly sizeWatchOff: WatchHandle;
-    private readonly selectedColorWatchOff: WatchHandle;
-
     private readonly borderWidth: number = 2;
     private selectedColor: [number, number, number, number] | null = null;
     private screenSpaceBorderCutoff: number | null = null;
+    private browserCapableOfHover: boolean = false;
+
+    private readonly effectScope: EffectScope;
 
     constructor(gl: WebGL2RenderingContext) {
         const { mouseBoardCoords, scale } = storeToRefs(useCanvasViewportStore());
@@ -26,34 +27,47 @@ class ReticleRenderable extends QuadRenderable {
 
         this.activeProgram = this.createProgram(simpleRectVertexShaderSource, reticleFragmentShaderSource);
 
-        this.sizeWatchOff = watch(
-            [mouseBoardCoords, scale],
-            ([coords, newScale]) => {
-                if (!coords || newScale == null) {
-                    this.width = 0;
-                    this.height = 0;
-                    return;
+        this.effectScope = effectScope(true);
+
+        this.effectScope.run(() => {
+            const canHover = useMediaQuery('(hover: hover)');
+
+            watch(
+                [mouseBoardCoords, scale],
+                ([coords, newScale]) => {
+                    if (!coords || newScale == null) {
+                        this.width = 0;
+                        this.height = 0;
+                        return;
+                    }
+                    const borderSizeInBoardCoords = this.borderWidth / newScale;
+                    this.x = coords.x - borderSizeInBoardCoords;
+                    this.y = coords.y - borderSizeInBoardCoords;
+                    this.width = 1 + borderSizeInBoardCoords * 2;
+                    this.height = 1 + borderSizeInBoardCoords * 2;
+                    this.screenSpaceBorderCutoff = 1 - this.borderWidth / (newScale + 2 * this.borderWidth);
+                },
+                { immediate: true },
+            );
+            watch(selectedColor, (newColor) => {
+                if (newColor == null) {
+                    this.selectedColor = null;
+                } else {
+                    this.selectedColor = abgrToVec4(newColor.rawRgba);
                 }
-                const borderSizeInBoardCoords = this.borderWidth / newScale;
-                this.x = coords.x - borderSizeInBoardCoords;
-                this.y = coords.y - borderSizeInBoardCoords;
-                this.width = 1 + borderSizeInBoardCoords * 2;
-                this.height = 1 + borderSizeInBoardCoords * 2;
-                this.screenSpaceBorderCutoff = 1 - this.borderWidth / (newScale + 2 * this.borderWidth);
-            },
-            { immediate: true },
-        );
-        this.selectedColorWatchOff = watch(selectedColor, (newColor) => {
-            if (newColor == null) {
-                this.selectedColor = null;
-            } else {
-                this.selectedColor = abgrToVec4(newColor.rawRgba);
-            }
+            });
+            watch(
+                canHover,
+                (value) => {
+                    this.browserCapableOfHover = value;
+                },
+                { immediate: true },
+            );
         });
     }
 
     override render(projectionMatrixUniform: Float32Array): void {
-        if (!this.selectedColor || this.screenSpaceBorderCutoff == null) {
+        if (!this.selectedColor || this.screenSpaceBorderCutoff == null || !this.browserCapableOfHover) {
             return;
         }
 
@@ -61,8 +75,7 @@ class ReticleRenderable extends QuadRenderable {
     }
 
     override destroy(): void {
-        this.sizeWatchOff();
-        this.selectedColorWatchOff();
+        this.effectScope.stop();
         super.destroy();
     }
 

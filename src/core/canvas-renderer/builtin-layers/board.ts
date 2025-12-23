@@ -5,20 +5,15 @@ import simpleRectVertexShaderSource from '@/core/canvas-renderer/shaders/simple-
 import simpleTextureFragmentShaderSource from '@/core/canvas-renderer/shaders/simple-texture.frag?raw';
 import { useBoardStore } from '@/core/canvas/board.store.ts';
 import { useBoardInitEventBus, useBoardResetEventBus, usePixelEventBus } from '@/core/canvas/event-buses.ts';
-import type { Fn } from '@vueuse/core';
+import { effectScope, type EffectScope } from 'vue';
 
 class BoardRenderable extends SimpleQuadRenderable {
     protected activeProgram: WebGLProgram;
 
-    private readonly boardInitOff: Fn;
-    private readonly boardResetOff: Fn;
-    private readonly pixelPlacedOff: Fn;
+    private readonly effectScope: EffectScope;
 
     constructor(gl: WebGL2RenderingContext) {
         const boardStore = useBoardStore();
-        const boardInitEventBus = useBoardInitEventBus();
-        const boardResetEventBus = useBoardResetEventBus();
-        const pixelPlacedEventBus = usePixelEventBus();
 
         const textureData = new Uint32RenderableTextureData();
         let initialWidth = 0;
@@ -33,23 +28,29 @@ class BoardRenderable extends SimpleQuadRenderable {
 
         this.activeProgram = this.createProgram(simpleRectVertexShaderSource, simpleTextureFragmentShaderSource);
 
-        this.boardInitOff = boardInitEventBus.on(({ board: { width, height, data } }) => {
-            textureData.useTextureData(new Uint32Array(data.buffer), width, height);
-            this.width = width;
-            this.height = height;
-        });
-        this.boardResetOff = boardResetEventBus.on(() => {
-            textureData.resetTextureData();
-        });
-        this.pixelPlacedOff = pixelPlacedEventBus.on(({ x, y, colorRawRgba }) => {
-            textureData.setPixel(x, y, colorRawRgba);
+        this.effectScope = effectScope(true);
+
+        this.effectScope.run(() => {
+            const boardInitEventBus = useBoardInitEventBus();
+            const boardResetEventBus = useBoardResetEventBus();
+            const pixelPlacedEventBus = usePixelEventBus();
+
+            boardInitEventBus.on(({ board: { width, height, data } }) => {
+                textureData.useTextureData(new Uint32Array(data.buffer), width, height);
+                this.width = width;
+                this.height = height;
+            });
+            boardResetEventBus.on(() => {
+                textureData.resetTextureData();
+            });
+            pixelPlacedEventBus.on(({ x, y, colorRawRgba }) => {
+                textureData.setPixel(x, y, colorRawRgba);
+            });
         });
     }
 
     override destroy(): void {
-        this.boardInitOff();
-        this.boardResetOff();
-        this.pixelPlacedOff();
+        this.effectScope.stop();
         super.destroy();
     }
 }

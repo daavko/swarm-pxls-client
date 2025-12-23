@@ -1,5 +1,14 @@
-import type { Point } from '@/utils/geometry.ts';
-import { type RemovableRef, StorageSerializers, useLocalStorage } from '@vueuse/core';
+import { type Point, pointStorageSchema } from '@/utils/geometry.ts';
+import { typedStorageSerializer } from '@/utils/typed-storage-serializer.ts';
+import { type RemovableRef, useLocalStorage } from '@vueuse/core';
+import * as v from 'valibot';
+
+const canvasPanScaleStorageSchema = v.nullable(
+    v.object({
+        pan: pointStorageSchema,
+        scale: v.number(),
+    }),
+);
 
 export interface CanvasPanScale {
     pan: Point;
@@ -8,7 +17,7 @@ export interface CanvasPanScale {
 
 export function useCanvasPanScaleStorage(): RemovableRef<CanvasPanScale | null> {
     return useLocalStorage<CanvasPanScale | null>('canvas-pan-scale', null, {
-        serializer: StorageSerializers.object,
+        serializer: typedStorageSerializer(canvasPanScaleStorageSchema),
         flush: 'sync',
     });
 }

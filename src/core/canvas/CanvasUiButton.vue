@@ -1,5 +1,5 @@
 <template>
-    <MdiIconButton circular :iconPath="iconPath" ref="button"></MdiIconButton>
+    <MdiIconButton circular :iconPath="iconPath" ref="button" v-bind="$attrs"></MdiIconButton>
     <TooltipOverlay v-if="$slots['tooltip']" :target="button"><slot name="tooltip"></slot></TooltipOverlay>
 </template>
 

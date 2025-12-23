@@ -1,8 +1,11 @@
+import * as v from 'valibot';
+
 type TemplateLoadState = 'beforeLoad' | 'loading' | 'loaded' | 'error' | 'checkingForUpdate' | 'updateCheckError';
 
 interface BaseCanvasTemplate {
     name: string;
     loadState: TemplateLoadState;
+    enabled: boolean;
 }
 
 interface RedirectCanvasTemplate extends BaseCanvasTemplate {
@@ -41,3 +44,6 @@ interface RedirectTemplateData extends BaseTemplateData {
 type LinkTemplateData = BaseTemplateData;
 
 type ImageTemplateData = BaseTemplateData;
+
+export const TemplateRenderingMode = v.picklist(['oneToOne', 'dotted', 'symbols', 'numbers']);
+export type TemplateRenderingMode = v.InferOutput<typeof TemplateRenderingMode>;

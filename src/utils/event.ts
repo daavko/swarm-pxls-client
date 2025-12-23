@@ -1,5 +1,9 @@
-export function eventIsInappropriate(event: MouseEvent, checkKeys: boolean): boolean {
-    return !event.isTrusted || (checkKeys && (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey));
+export function eventIsUntrusted(event: Event): boolean {
+    return !event.isTrusted;
+}
+
+export function eventHasModifierKeys(event: MouseEvent): boolean {
+    return event.altKey || event.ctrlKey || event.metaKey || event.shiftKey;
 }
 
 export function eventTargetIsInput(event: Event): boolean {

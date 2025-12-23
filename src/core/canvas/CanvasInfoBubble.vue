@@ -40,23 +40,17 @@
 
                 <div class="bubble-section__row">
                     <MdiIcon :iconPath="mdiCompass" :size="20"></MdiIcon>
-                    <p class="text-underline">
-                        <a @click.prevent=""
-                            >({{ mouseBoardCoords?.x ?? '???' }}, {{ mouseBoardCoords?.y ?? '???' }})</a
-                        >
-                    </p>
+                    <p>({{ mouseBoardCoords?.x ?? '???' }}, {{ mouseBoardCoords?.y ?? '???' }})</p>
                 </div>
 
                 <div v-if="showAvailablePixels" class="bubble-section__row">
                     <MdiIcon :iconPath="mdiCube" :size="20"></MdiIcon>
-                    <p><span class="fw-bold">Pixels:</span> {{ availablePixels }}/{{ info?.maxStacked }}</p>
+                    <p class="fw-bold">Pixels: {{ availablePixels }}/{{ info?.maxStacked }}</p>
                 </div>
 
                 <div v-if="loggedIn === true && cooldown != null" class="bubble-section__row">
                     <MdiIcon :iconPath="mdiClock" :size="20"></MdiIcon>
-                    <p>
-                        <span class="fw-bold">{{ formattedCooldown }}</span>
-                    </p>
+                    <p class="fw-bold">{{ formattedCooldown }}</p>
                 </div>
             </div>
         </template>
@@ -69,9 +63,7 @@
                     </div>
                     <div v-if="loggedIn === true && cooldown != null" class="bubble-section__row">
                         <MdiIcon :iconPath="mdiClock" :size="24"></MdiIcon>
-                        <p>
-                            <span class="fw-bold">{{ formattedCooldown }}</span>
-                        </p>
+                        <p class="fw-bold">{{ formattedCooldown }}</p>
                     </div>
                 </div>
                 <MdiIconButton
@@ -88,9 +80,13 @@
 </template>
 
 <script setup lang="ts">
+import { useCanvasViewportStore } from '@/core/canvas-renderer/canvas-viewport.store.ts';
+import { useTypeAssistedCanvasInfo } from '@/core/canvas/canvas.store.ts';
 import { useUsersStore } from '@/core/canvas/users.store.ts';
 import MdiIcon from '@/core/common/MdiIcon.vue';
 import MdiIconButton from '@/core/common/MdiIconButton.vue';
+import { useSession, useTypeAssistedSessionUserInfo } from '@/core/session/session.store.ts';
+import { useFormatNumber } from '@/utils/format.ts';
 import {
     mdiAccount,
     mdiAccountGroup,
@@ -103,12 +99,8 @@ import {
     mdiCube,
     mdiLogout,
 } from '@mdi/js';
-import { computed, onBeforeMount, ref } from 'vue';
-import { useTypeAssistedCanvasInfo } from '@/core/canvas/canvas.store.ts';
-import { useSession, useTypeAssistedSessionUserInfo } from '@/core/session/session.store.ts';
-import { useFormatNumber } from '@/utils/format.ts';
 import { storeToRefs } from 'pinia';
-import { useCanvasViewportStore } from '@/core/canvas-renderer/canvas-viewport.store.ts';
+import { computed, onBeforeMount, ref } from 'vue';
 
 const { usersLoadState, userCount } = storeToRefs(useUsersStore());
 const { loadUserCount } = useUsersStore();
@@ -148,7 +140,11 @@ onBeforeMount(() => {
     color: var(--panel-text-color);
     border-radius: 8px;
     overflow: hidden;
-    min-width: 150px;
+    user-select: none;
+
+    @media (width >= 768px) {
+        min-width: 150px;
+    }
 
     &.bubble--expanded {
         min-width: 15ch;

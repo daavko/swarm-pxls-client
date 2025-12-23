@@ -1,6 +1,11 @@
 import { useCanvasViewportStore } from '@/core/canvas-renderer/canvas-viewport.store.ts';
-import { useBoardResetEventBus } from '@/core/canvas/event-buses.ts';
-import { eventIsInappropriate } from '@/utils/event.ts';
+import {
+    useBoardResetEventBus,
+    useCanvasPointerCancelEventBus,
+    useCanvasPointerDownEventBus,
+    useCanvasPointerUpEventBus,
+} from '@/core/canvas/event-buses.ts';
+import { eventHasModifierKeys, eventIsUntrusted } from '@/utils/event.ts';
 import { type Point, pointDelta, pointsDistance, pointToDeviceCoords, sizeCenter } from '@/utils/geometry.ts';
 import { useEventListener } from '@vueuse/core';
 import { storeToRefs } from 'pinia';
@@ -84,6 +89,9 @@ interface UseCanvasPannerReturn {
 
 export function useCanvasPanner(canvas: TemplateRef<HTMLCanvasElement>): UseCanvasPannerReturn {
     const boardResetEventBus = useBoardResetEventBus();
+    const pointerDownEventBus = useCanvasPointerDownEventBus();
+    const pointerUpEventBus = useCanvasPointerUpEventBus();
+    const pointerCancelEventBus = useCanvasPointerCancelEventBus();
     const canvasViewportStore = useCanvasViewportStore();
     const { pan, scale, canScaleDown, canScaleUp } = storeToRefs(useCanvasViewportStore());
 
@@ -98,7 +106,13 @@ export function useCanvasPanner(canvas: TemplateRef<HTMLCanvasElement>): UseCanv
             const viewportCoords = pointToDeviceCoords({ x: event.offsetX, y: event.offsetY });
             canvasViewportStore.updateMouseViewportCoords(viewportCoords);
 
-            if (interactionLocked.value || eventIsInappropriate(event, true)) {
+            if (eventIsUntrusted(event)) {
+                return;
+            }
+
+            // todo: fire a "canvas pointer down" event here
+
+            if (interactionLocked.value || eventHasModifierKeys(event)) {
                 return;
             }
 
@@ -131,7 +145,7 @@ export function useCanvasPanner(canvas: TemplateRef<HTMLCanvasElement>): UseCanv
             const viewportCoords = pointToDeviceCoords({ x: event.offsetX, y: event.offsetY });
             canvasViewportStore.updateMouseViewportCoords(viewportCoords);
 
-            if (interactionLocked.value || eventIsInappropriate(event, false)) {
+            if (interactionLocked.value || eventIsUntrusted(event)) {
                 return;
             }
 
@@ -171,6 +185,12 @@ export function useCanvasPanner(canvas: TemplateRef<HTMLCanvasElement>): UseCanv
             const viewportCoords = pointToDeviceCoords({ x: event.offsetX, y: event.offsetY });
             canvasViewportStore.updateMouseViewportCoords(viewportCoords);
             removePointer(event);
+
+            if (eventIsUntrusted(event)) {
+                return;
+            }
+
+            // todo: fire a "canvas pointer up" event here
         },
         { passive: true },
     );
@@ -179,6 +199,12 @@ export function useCanvasPanner(canvas: TemplateRef<HTMLCanvasElement>): UseCanv
         'pointercancel',
         (event) => {
             removePointer(event);
+
+            if (eventIsUntrusted(event)) {
+                return;
+            }
+
+            // todo: fire a "canvas pointer cancel" event here
         },
         { passive: true },
     );
@@ -186,7 +212,7 @@ export function useCanvasPanner(canvas: TemplateRef<HTMLCanvasElement>): UseCanv
         canvas,
         'wheel',
         (event) => {
-            if (interactionLocked.value || eventIsInappropriate(event, true)) {
+            if (interactionLocked.value || eventIsUntrusted(event) || eventHasModifierKeys(event)) {
                 return;
             }
 

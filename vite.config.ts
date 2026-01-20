@@ -11,6 +11,9 @@ export default defineConfig(({ command }) => {
         build: {
             target: 'esnext',
         },
+        worker: {
+            format: 'es',
+        },
         define: {
             __PXLS_API_BASE_URL__: isDev ? '"/pxls-api"' : '"https://pxls-proxy.shuni.moe"',
             __PXLS_SOCKET_BASE_URL__: isDev ? '"/pxls-ws"' : '"wss://pxls-proxy.shuni.moe"',

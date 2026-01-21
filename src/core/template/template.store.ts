@@ -11,9 +11,17 @@ export const useTemplateStore = defineStore('templates', () => {
     const templates = ref<CanvasTemplate[]>(templateStorage.value.templates);
     const displayData = shallowRef<ImageData | null>(null);
 
-    watch(templates, () => {});
+    watch(templates, (value) => {
+        for (const template of value) {
+            if (template.loadState === 'beforeLoad') {
+                loadTemplateData(template.name);
+            }
+        }
+    });
 
-    function addTemplate(template: CanvasTemplate): void {}
+    function addTemplate(template: CanvasTemplate): void {
+        templates.value.push(template);
+    }
 
     function loadTemplateData(templateName: string): void {
         const template = templates.value.find((t) => t.name === templateName);

@@ -1,6 +1,6 @@
 import type { PaletteItem } from '@/core/pxls-api/schemas/info.ts';
 
-export interface TemplateProcessingTask<TaskType extends string, PayloadType> {
+export interface TemplateProcessingMessage<TaskType extends string, PayloadType> {
     id: string;
     type: TaskType;
     payload: PayloadType;
@@ -34,9 +34,21 @@ export interface TemplateDetemplatizeSuccessResponse {
 
 export type TemplateDetemplatizeResponse = TemplateDetemplatizeSuccessResponse | TemplateGeneralErrorResponse;
 
-export type TemplateProcessingTaskRequest =
-    | TemplateProcessingTask<'colorMap', TemplateColorMapRequest>
-    | TemplateProcessingTask<'detemplatize', TemplateDetemplatizeRequest>;
-export type TemplateProcessingTaskResponse =
-    | TemplateProcessingTask<'colorMap', TemplateColorMapResponse>
-    | TemplateProcessingTask<'detemplatize', TemplateDetemplatizeResponse>;
+interface RequestResponsePair<RequestType, ResponseType> {
+    request: RequestType;
+    response: ResponseType;
+}
+
+export type TemplateProcessingMessageMap = {
+    colorMap: RequestResponsePair<TemplateColorMapRequest, TemplateColorMapResponse>;
+    detemplatize: RequestResponsePair<TemplateDetemplatizeRequest, TemplateDetemplatizeResponse>;
+};
+
+export type TemplateProcessingRequest<TaskKey extends keyof TemplateProcessingMessageMap> =
+    TemplateProcessingMessageMap[TaskKey]['request'];
+export type TemplateProcessingRequestMessage<TaskKey extends keyof TemplateProcessingMessageMap> =
+    TemplateProcessingMessage<TaskKey, TemplateProcessingMessageMap[TaskKey]['request']>;
+export type TemplateProcessingResponse<TaskKey extends keyof TemplateProcessingMessageMap> =
+    TemplateProcessingMessageMap[TaskKey]['response'];
+export type TemplateProcessingResponseMessage<TaskKey extends keyof TemplateProcessingMessageMap> =
+    TemplateProcessingMessage<TaskKey, TemplateProcessingMessageMap[TaskKey]['response']>;

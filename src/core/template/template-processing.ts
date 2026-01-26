@@ -1,8 +1,11 @@
 import type { PaletteItem } from '@/core/pxls-api/schemas/info.ts';
 import type {
-    TemplateProcessingTaskRequest,
-    TemplateProcessingTaskResponse,
-} from '@/workers/template-processing.types.ts';
+    TemplateProcessingMessageMap,
+    TemplateProcessingRequest,
+    TemplateProcessingRequestMessage,
+    TemplateProcessingResponse,
+    TemplateProcessingResponseMessage,
+} from '@/workers/template-processing.types.ts'; // todo: adjust this to a suitable value
 
 // todo: adjust this to a suitable value
 const MAX_MAIN_THREAD_IMAGE_PIXELS = 100 * 100;
@@ -18,35 +21,26 @@ function imageIsLarge(image: ImageData): boolean {
     return image.width * image.height > MAX_MAIN_THREAD_IMAGE_PIXELS;
 }
 
-function sendWorkerTask<T extends TemplateProcessingTaskRequest>(
-    requestType: T['type'],
-    request: T['payload'],
-): string {
+async function performWorkerTask<TaskKey extends keyof TemplateProcessingMessageMap>(
+    requestType: TaskKey,
+    request: NoInfer<TemplateProcessingRequest<TaskKey>>,
+): Promise<TemplateProcessingResponse<TaskKey>> {
     const worker = getTemplateProcessingWorker();
     const taskId = crypto.randomUUID() as string;
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- safe
-    const message: T = {
+    const message: TemplateProcessingRequestMessage<TaskKey> = {
         type: requestType,
         id: taskId,
         payload: request,
-    } as T;
-    worker.postMessage(message);
-    return taskId;
-}
-
-async function waitForWorkerResponse<T extends TemplateProcessingTaskResponse>(
-    taskType: T['type'],
-    taskId: string,
-): Promise<T['payload']> {
-    const worker = getTemplateProcessingWorker();
-    const { promise, resolve } = Promise.withResolvers<T['payload']>();
-    const messageHandler = (event: MessageEvent<T>): void => {
-        if (event.data.type === taskType && event.data.id === taskId) {
+    };
+    const { promise, resolve } = Promise.withResolvers<TemplateProcessingResponse<TaskKey>>();
+    const messageHandler = (event: MessageEvent<TemplateProcessingResponseMessage<TaskKey>>): void => {
+        if (event.data.type === requestType && event.data.id === taskId) {
             worker.removeEventListener('message', messageHandler);
             resolve(event.data.payload);
         }
     };
     worker.addEventListener('message', messageHandler);
+    worker.postMessage(message);
     return promise;
 }
 
@@ -65,8 +59,7 @@ export async function downscaleImage(image: ImageData, width: number): Promise<I
 
 export async function mapColorsToPalette(image: ImageData, palette: PaletteItem[]): Promise<ImageData> {
     if (imageIsLarge(image)) {
-        const taskId = sendWorkerTask('colorMap', { image, palette });
-        const response = await waitForWorkerResponse('colorMap', taskId);
+        const response = await performWorkerTask('colorMap', { image, palette });
         if (response.success) {
             return response.image;
         } else {
@@ -85,8 +78,7 @@ export async function highlightIncorrectColors(image: ImageData, palette: Palett
 
 export async function detemplatizeImage(image: ImageData, cellSize: number): Promise<ImageData> {
     if (imageIsLarge(image)) {
-        const taskId = sendWorkerTask('detemplatize', { image });
-        const response = await waitForWorkerResponse('detemplatize', taskId);
+        const response = await performWorkerTask('detemplatize', { image });
         if (response.success) {
             return response.image;
         } else {

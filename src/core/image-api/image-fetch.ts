@@ -1,35 +1,47 @@
-import { IMAGE_PROXY_HOST } from '@/core/image-proxy/const.ts';
+import { IMAGE_PROXY_HOST } from '@/core/image-api/const.ts';
+import { logDebugMessage } from '@/core/logger/debug-log.ts';
 
-export interface ImageProxySuccessResponse {
+export interface ImageFetchSuccessResponse {
     success: true;
     data: ImageData;
 }
 
-export interface ImageProxyErrorResponse {
+export interface ImageFetchErrorResponse {
     success: false;
     error: Error;
 }
 
-export type ImageProxyResponse = ImageProxySuccessResponse | ImageProxyErrorResponse;
+export type ImageFetchResponse = ImageFetchSuccessResponse | ImageFetchErrorResponse;
 
-export async function fetchImageViaProxy(imageUrl: string, options: RequestInit = {}): Promise<ImageProxyResponse> {
-    let response: Response;
+export async function fetchImage(imageUrl: string, options: RequestInit = {}): Promise<ImageFetchResponse> {
+    let response: Response | undefined;
     try {
-        response = await fetch(`https://${IMAGE_PROXY_HOST}/imageproxy/${encodeURIComponent(imageUrl)}`, {
+        response = await fetch(imageUrl, {
             ...options,
             method: 'GET',
         });
     } catch (e: unknown) {
-        return {
-            success: false,
-            error: new Error('Image proxy request failed', { cause: e }),
-        };
+        logDebugMessage(['Image fetch failed, retrying via proxy...', e]);
+    }
+
+    if (!response) {
+        try {
+            response = await fetch(`https://${IMAGE_PROXY_HOST}/imageproxy/${encodeURIComponent(imageUrl)}`, {
+                ...options,
+                method: 'GET',
+            });
+        } catch (e: unknown) {
+            return {
+                success: false,
+                error: new Error('Image proxy request failed', { cause: e }),
+            };
+        }
     }
 
     if (!response.ok) {
         return {
             success: false,
-            error: new Error(`Image proxy request failed with status ${response.status}`),
+            error: new Error(`Image request failed with status ${response.status}`),
         };
     }
 

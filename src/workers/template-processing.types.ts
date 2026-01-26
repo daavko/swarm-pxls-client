@@ -1,11 +1,19 @@
+import type { PaletteItem } from '@/core/pxls-api/schemas/info.ts';
+
+export interface TemplateProcessingTask<TaskType extends string, PayloadType> {
+    id: string;
+    type: TaskType;
+    payload: PayloadType;
+}
+
 export interface TemplateGeneralErrorResponse {
     success: false;
     error: Error;
 }
 
 export interface TemplateColorMapRequest {
-    requestType: 'colorMap';
     image: ImageData;
+    palette: PaletteItem[];
 }
 
 export interface TemplateColorMapSuccessResponse {
@@ -16,7 +24,6 @@ export interface TemplateColorMapSuccessResponse {
 export type TemplateColorMapResponse = TemplateColorMapSuccessResponse | TemplateGeneralErrorResponse;
 
 export interface TemplateDetemplatizeRequest {
-    requestType: 'detemplatize';
     image: ImageData;
 }
 
@@ -26,3 +33,10 @@ export interface TemplateDetemplatizeSuccessResponse {
 }
 
 export type TemplateDetemplatizeResponse = TemplateDetemplatizeSuccessResponse | TemplateGeneralErrorResponse;
+
+export type TemplateProcessingTaskRequest =
+    | TemplateProcessingTask<'colorMap', TemplateColorMapRequest>
+    | TemplateProcessingTask<'detemplatize', TemplateDetemplatizeRequest>;
+export type TemplateProcessingTaskResponse =
+    | TemplateProcessingTask<'colorMap', TemplateColorMapResponse>
+    | TemplateProcessingTask<'detemplatize', TemplateDetemplatizeResponse>;

@@ -1,13 +1,17 @@
 import type { PaletteItem } from '@/core/pxls-api/schemas/info.ts';
+import {
+    detemplatizeImageImpl,
+    highlightIncorrectColorsImpl,
+    mapColorsToPaletteImpl,
+} from '@/core/template/template-processing-impl.ts';
 import type {
+    TemplateProcessingKeyedRequestMessage,
     TemplateProcessingMessageMap,
     TemplateProcessingRequest,
-    TemplateProcessingRequestMessage,
     TemplateProcessingResponse,
     TemplateProcessingResponseMessage,
-} from '@/workers/template-processing.types.ts'; // todo: adjust this to a suitable value
+} from '@/workers/template-processing.types.ts';
 
-// todo: adjust this to a suitable value
 const MAX_MAIN_THREAD_IMAGE_PIXELS = 100 * 100;
 
 let templateProcessingWorker: Worker | null = null;
@@ -24,23 +28,24 @@ function imageIsLarge(image: ImageData): boolean {
 async function performWorkerTask<TaskKey extends keyof TemplateProcessingMessageMap>(
     requestType: TaskKey,
     request: NoInfer<TemplateProcessingRequest<TaskKey>>,
+    transfer: Transferable[] = [],
 ): Promise<TemplateProcessingResponse<TaskKey>> {
     const worker = getTemplateProcessingWorker();
     const taskId = crypto.randomUUID() as string;
-    const message: TemplateProcessingRequestMessage<TaskKey> = {
+    const message: TemplateProcessingKeyedRequestMessage<TaskKey> = {
         type: requestType,
         id: taskId,
         payload: request,
     };
     const { promise, resolve } = Promise.withResolvers<TemplateProcessingResponse<TaskKey>>();
-    const messageHandler = (event: MessageEvent<TemplateProcessingResponseMessage<TaskKey>>): void => {
+    const messageHandler = (event: MessageEvent<TemplateProcessingResponseMessage>): void => {
         if (event.data.type === requestType && event.data.id === taskId) {
             worker.removeEventListener('message', messageHandler);
             resolve(event.data.payload);
         }
     };
     worker.addEventListener('message', messageHandler);
-    worker.postMessage(message);
+    worker.postMessage(message, { transfer });
     return promise;
 }
 
@@ -59,31 +64,36 @@ export async function downscaleImage(image: ImageData, width: number): Promise<I
 
 export async function mapColorsToPalette(image: ImageData, palette: PaletteItem[]): Promise<ImageData> {
     if (imageIsLarge(image)) {
-        const response = await performWorkerTask('colorMap', { image, palette });
+        const response = await performWorkerTask('colorMap', { image, palette }, [image.data.buffer]);
         if (response.success) {
             return response.image;
         } else {
             throw response.error;
         }
     }
-    // todo
+    return mapColorsToPaletteImpl(image, palette);
 }
 
 export async function highlightIncorrectColors(image: ImageData, palette: PaletteItem[]): Promise<ImageData> {
     if (imageIsLarge(image)) {
-        // todo: send correct task
-    }
-    // todo
-}
-
-export async function detemplatizeImage(image: ImageData, cellSize: number): Promise<ImageData> {
-    if (imageIsLarge(image)) {
-        const response = await performWorkerTask('detemplatize', { image });
+        const response = await performWorkerTask('highlightIncorrectColors', { image, palette }, [image.data.buffer]);
         if (response.success) {
             return response.image;
         } else {
             throw response.error;
         }
     }
-    // todo
+    return highlightIncorrectColorsImpl(image, palette);
+}
+
+export async function detemplatizeImage(image: ImageData, targetWidth: number): Promise<ImageData> {
+    if (imageIsLarge(image)) {
+        const response = await performWorkerTask('detemplatize', { image, targetWidth }, [image.data.buffer]);
+        if (response.success) {
+            return response.image;
+        } else {
+            throw response.error;
+        }
+    }
+    return detemplatizeImageImpl(image, targetWidth);
 }
